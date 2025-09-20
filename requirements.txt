@@ -12,7 +12,6 @@ gunicorn==23.0.0
 sqlalchemy[asyncio]==2.0.35
 asyncpg==0.29.0
 alembic==1.13.3
-psycopg2-binary==2.9.9
 
 # הגדרות ו-Environment Variables
 pydantic-settings==2.5.2

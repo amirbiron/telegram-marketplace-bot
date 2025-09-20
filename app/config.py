@@ -103,6 +103,13 @@ class Settings(BaseSettings):
             raise ValueError(f"ENVIRONMENT must be one of: {allowed}")
         return v
     
+    @validator("DATABASE_URL", pre=True)
+    def coerce_database_url_to_asyncpg(cls, v):
+        """המרת postgresql:// ל-postgresql+asyncpg:// לשימוש אסינכרוני"""
+        if isinstance(v, str) and v.startswith("postgresql://"):
+            return "postgresql+asyncpg://" + v[len("postgresql://"):]
+        return v
+
     @validator("DATABASE_URL")
     def validate_database_url(cls, v):
         """וידוא כתובת מסד נתונים תקינה"""

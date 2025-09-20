@@ -70,7 +70,7 @@ class DatabaseManager:
                         "application_name": f"{settings.APP_NAME}_v{settings.VERSION}"
                     },
                     "command_timeout": 60,
-                    "prepared_statement_cache_size": 0,  # נמנע מ-cache problems
+                    "statement_cache_size": 0,  # נמנע מ-cache problems
                 }
             )
             
