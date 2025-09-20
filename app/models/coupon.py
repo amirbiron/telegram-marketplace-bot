@@ -98,31 +98,28 @@ class Coupon(Base):
     """קופון/כרטיס למכירה"""
     __tablename__ = "coupons"
     
+    # Core identifiers (ללא nullable/ברירת מחדל)
     id: Mapped[str] = mapped_column(
-        String(36), 
-        primary_key=True, 
+        String(36),
+        primary_key=True,
         default=lambda: str(uuid.uuid4()),
         init=False
     )
-    
-    # Basic Info
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    category_id: Mapped[str] = mapped_column(ForeignKey("coupon_categories.id"))
-    
-    # Content
-    title: Mapped[str] = mapped_column(String(200))
-    description: Mapped[str] = mapped_column(Text)
-    business_name: Mapped[str] = mapped_column(String(200))  # שם העסק
-    
-    # Pricing
-    original_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))  # מחיר רשמי
-    selling_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))   # מחיר מכירה
-    discount_percent: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # אחוז הנחה
-    
-    # Validity
+    # לפי הדרישה: להציב expires_at מוקדם
     expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # שדות חובה נוספים
+    category_id: Mapped[str] = mapped_column(ForeignKey("coupon_categories.id"))
+    title: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text)
+    business_name: Mapped[str] = mapped_column(String(200))  # שם העסק
+    original_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))  # מחיר רשמי
+    selling_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))   # מחיר מכירה
+    
+    # שדות אופציונליים / עם ברירת מחדל
+    discount_percent: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # אחוז הנחה
     valid_from: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
