@@ -66,9 +66,13 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
-    # Role & Status (שדות עם ברירת מחדל יבואו אחרי last_activity_at)
+    # Role & Status (שדות עם ברירת מחדל יבואו אחרי שדות ללא ברירת מחדל)
     
-    # Timestamps - שדה ללא ברירת מחדל לפני שדות עם ברירת מחדל
+    # Contact Info (עבור מוכרים) - ללא ברירת מחדל
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    
+    # Timestamps / Status ordering
     last_activity_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), 
         nullable=True
@@ -88,9 +92,7 @@ class User(Base):
         init=False
     )
     
-    # Contact Info (עבור מוכרים)
-    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    email: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    # Contact Info הוזז למעלה
     
     # === Relationships ===
     wallet: Mapped[Optional["Wallet"]] = relationship(

@@ -342,32 +342,32 @@ class CouponRating(Base):
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
     
-    # Foreign Keys
+    # === Relationships (מיד אחרי ה-PK, לפני שדות עם ברירת מחדל) ===
+    order: Mapped["Order"] = relationship("Order")
+    buyer: Mapped["User"] = relationship("User", foreign_keys=["CouponRating.buyer_id"])  # שימוש במחרוזת כדי לאפשר סדר
+    seller: Mapped["User"] = relationship("User", foreign_keys=["CouponRating.seller_id"])  # שימוש במחרוזת כדי לאפשר סדר
+    coupon: Mapped["Coupon"] = relationship("Coupon")
+    
+    # Foreign Keys (שדות חובה)
     order_id: Mapped[str] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"))
     buyer_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     coupon_id: Mapped[str] = mapped_column(ForeignKey("coupons.id", ondelete="CASCADE"))
     
-    # Rating Details
+    # Rating Details (חובה/nullable ללא ברירות מחדל)
     rating: Mapped[int] = mapped_column(Integer)  # 1-5 כוכבים
-    comment: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)  # עד 15 תווים כמו בדרישות
+    comment: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)  # עד 150 תווים
     
-    # Metadata
+    # Metadata (עם ברירות מחדל)
     is_public: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified_purchase: Mapped[bool] = mapped_column(Boolean, default=True)
     
-    # Timestamp
+    # Timestamp (מחוץ ל-__init__)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
-    
-    # === Relationships ===
-    order: Mapped["Order"] = relationship("Order")
-    buyer: Mapped["User"] = relationship("User", foreign_keys=[buyer_id])
-    seller: Mapped["User"] = relationship("User", foreign_keys=[seller_id])
-    coupon: Mapped["Coupon"] = relationship("Coupon")
     
     # Indexes & Constraints
     __table_args__ = (

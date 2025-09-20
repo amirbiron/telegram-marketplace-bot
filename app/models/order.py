@@ -74,19 +74,11 @@ class Order(Base):
     total_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))  # סה"כ לפני עמלות
     quantity: Mapped[int] = mapped_column(Integer, default=1)
     
-    # Financial Breakdown - תוספות חדשות חשובות
-    buyer_fee: Mapped[Decimal] = mapped_column(
-        Numeric(10, 2), default=Decimal('0.00')
-    )  # עמלת קונה
-    seller_fee: Mapped[Decimal] = mapped_column(
-        Numeric(10, 2), default=Decimal('0.00')  
-    )  # עמלת מוכר
-    seller_amount_gross: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2)
-    )  # סכום מוכר ברוטו (לפני עמלה)
-    seller_amount_net: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2)
-    )  # סכום מוכר נטו (אחרי עמלה)
+    # Financial Breakdown - שדות חובה לפני שדות עם ברירת מחדל
+    seller_amount_gross: Mapped[Decimal] = mapped_column(Numeric(12, 2))  # סכום מוכר ברוטו (לפני עמלה)
+    seller_amount_net: Mapped[Decimal] = mapped_column(Numeric(12, 2))    # סכום מוכר נטו (אחרי עמלה)
+    buyer_fee: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal('0.00'))  # עמלת קונה
+    seller_fee: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal('0.00'))  # עמלת מוכר
     
     # Status & Timing - תוספות חדשות קריטיות
     status: Mapped[OrderStatus] = mapped_column(ENUM(OrderStatus), default=OrderStatus.PENDING)
