@@ -393,6 +393,12 @@ class SchedulerService:
                 user_id=favorite.user_id,
                 message=f"⏰ קופון פג בקרוב!\n{favorite.coupon.title}\nנותרו {days_left} ימים"
             )
+
+    async def _send_favorite_notifications(self, session: AsyncSession):
+        """התראות כלליות על מועדפים (placeholder)"""
+        # בשלב זה רק לוג כדי למנוע קריסה; לוגיקה תתווסף בהמשך
+        logger.debug("Running favorite notifications placeholder...")
+        return None
     
     # === משימות ניקוי (כל שעה) ===
     
