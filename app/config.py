@@ -105,9 +105,16 @@ class Settings(BaseSettings):
     
     @validator("DATABASE_URL", pre=True)
     def coerce_database_url_to_asyncpg(cls, v):
-        """המרת postgresql:// ל-postgresql+asyncpg:// לשימוש אסינכרוני"""
-        if isinstance(v, str) and v.startswith("postgresql://"):
-            return "postgresql+asyncpg://" + v[len("postgresql://"):]
+        """המרת postgres://, postgresql:// או postgresql+psycopg2:// ל-postgresql+asyncpg:// לשימוש אסינכרוני"""
+        if isinstance(v, str):
+            s = v.strip()
+            if s.startswith("postgres://"):
+                return "postgresql+asyncpg://" + s[len("postgres://"):]
+            if s.startswith("postgresql+psycopg2://"):
+                return "postgresql+asyncpg://" + s[len("postgresql+psycopg2://"):]
+            if s.startswith("postgresql://"):
+                return "postgresql+asyncpg://" + s[len("postgresql://"):]
+            return s
         return v
 
     @validator("DATABASE_URL")

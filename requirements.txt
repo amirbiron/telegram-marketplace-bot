@@ -8,7 +8,7 @@ fastapi==0.115.0
 uvicorn[standard]==0.30.6
 gunicorn==23.0.0
 
-# מסד נתונים - SQLAlchemy 2.0 + Async PostgreSQL
+# מסד נתונים - SQLAlchemy 2.0 + Async PostgreSQL (ללא psycopg2)
 sqlalchemy[asyncio]==2.0.35
 asyncpg==0.29.0
 alembic==1.13.3

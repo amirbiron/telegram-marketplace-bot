@@ -74,6 +74,14 @@ class DatabaseManager:
                 }
             )
             
+            # לוג לזיהוי הדרייבר בפועל (צפוי: asyncpg)
+            try:
+                dialect_name = self.engine.dialect.name
+                dialect_driver = self.engine.dialect.driver
+                logger.info(f"🔌 Database driver loaded: {dialect_name}+{dialect_driver}")
+            except Exception:
+                logger.info("🔌 Database driver loaded: unknown")
+
             # יצירת Session Maker
             self.async_session_maker = async_sessionmaker(
                 self.engine,
