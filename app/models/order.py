@@ -235,13 +235,7 @@ class Auction(Base):
         DateTime(timezone=True), nullable=True
     )  # הארכה אוטומטית
     
-    # Status
-    status: Mapped[AuctionStatus] = mapped_column(
-        ENUM(AuctionStatus), 
-        default=AuctionStatus.ACTIVE
-    )
-    
-    # Winner Info
+    # Winner Info (ללא ברירת מחדל)
     winner_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id"), nullable=True
     )
@@ -250,23 +244,6 @@ class Auction(Base):
     )
     finalized_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
-    )
-    
-    # Stats
-    total_bids: Mapped[int] = mapped_column(Integer, default=0)
-    unique_bidders: Mapped[int] = mapped_column(Integer, default=0)
-    
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default_factory=lambda: datetime.now(timezone.utc),
-        init=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default_factory=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-        init=False
     )
     
     # === Relationships ===
@@ -280,6 +257,24 @@ class Auction(Base):
         "AuctionBid", foreign_keys=[winning_bid_id]
     )
     
+    # Status (עם ברירת מחדל) ושדות סטטיסטיים עם ברירת מחדל
+    status: Mapped[AuctionStatus] = mapped_column(ENUM(AuctionStatus), default=AuctionStatus.ACTIVE)
+    total_bids: Mapped[int] = mapped_column(Integer, default=0)
+    unique_bidders: Mapped[int] = mapped_column(Integer, default=0)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default_factory=lambda: datetime.now(timezone.utc),
+        init=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        init=False
+    )
+
     # Indexes
     __table_args__ = (
         Index("idx_auctions_seller", "seller_id"),

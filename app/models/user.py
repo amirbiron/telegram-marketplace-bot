@@ -66,7 +66,19 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
-    # Role & Status (שדות עם ברירת מחדל יבואו אחרי שדות ללא ברירת מחדל)
+    # === Relationships === (ללא ברירות מחדל – להופיע לפני שדות עם ברירת מחדל)
+    wallet: Mapped[Optional["Wallet"]] = relationship(
+        "Wallet", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    seller_profile: Mapped[Optional["SellerProfile"]] = relationship(
+        "SellerProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    transactions: Mapped[list["Transaction"]] = relationship(
+        "Transaction", back_populates="user", cascade="all, delete-orphan"
+    )
+    fund_locks: Mapped[list["FundLock"]] = relationship(
+        "FundLock", back_populates="user", cascade="all, delete-orphan"
+    )
     
     # Contact Info (עבור מוכרים) - ללא ברירת מחדל
     phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
@@ -94,19 +106,7 @@ class User(Base):
     
     # Contact Info הוזז למעלה
     
-    # === Relationships === (ללא ברירות מחדל – להופיע לפני שדות עם ברירת מחדל)
-    wallet: Mapped[Optional["Wallet"]] = relationship(
-        "Wallet", back_populates="user", uselist=False, cascade="all, delete-orphan"
-    )
-    seller_profile: Mapped[Optional["SellerProfile"]] = relationship(
-        "SellerProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
-    )
-    transactions: Mapped[list["Transaction"]] = relationship(
-        "Transaction", back_populates="user", cascade="all, delete-orphan"
-    )
-    fund_locks: Mapped[list["FundLock"]] = relationship(
-        "FundLock", back_populates="user", cascade="all, delete-orphan"
-    )
+    # Relationships הוזזו למעלה
     
     # Indexes
     __table_args__ = (
