@@ -66,37 +66,15 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
-    # === Relationships === (ללא ברירות מחדל – להופיע לפני שדות עם ברירת מחדל)
-    wallet: Mapped[Optional["Wallet"]] = relationship(
-        "Wallet", back_populates="user", uselist=False, cascade="all, delete-orphan"
-    )
-    seller_profile: Mapped[Optional["SellerProfile"]] = relationship(
-        "SellerProfile",
-        back_populates="user",
-        uselist=False,
-        cascade="all, delete-orphan",
-        foreign_keys=lambda: [SellerProfile.user_id],
-        primaryjoin=lambda: User.id == SellerProfile.user_id
-    )
-    transactions: Mapped[list["Transaction"]] = relationship(
-        "Transaction",
-        back_populates="user",
-        cascade="all, delete-orphan",
-        foreign_keys=lambda: [Transaction.user_id],
-        primaryjoin=lambda: User.id == Transaction.user_id
-    )
-    fund_locks: Mapped[list["FundLock"]] = relationship(
-        "FundLock", back_populates="user", cascade="all, delete-orphan"
-    )
-    
-    # Contact Info (עבור מוכרים) - ללא ברירת מחדל
-    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    email: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    # Contact Info (עבור מוכרים) - שדות אופציונליים
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, default=None)
+    email: Mapped[Optional[str]] = mapped_column(String(200), nullable=True, default=None)
     
     # Timestamps / Status ordering
     last_activity_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), 
-        nullable=True
+        nullable=True,
+        default_factory=lambda: datetime.now(timezone.utc)
     )
     role: Mapped[UserRole] = mapped_column(ENUM(UserRole), default=UserRole.BUYER)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -113,9 +91,30 @@ class User(Base):
         init=False
     )
     
-    # Contact Info הוזז למעלה
-    
-    # Relationships הוזזו למעלה
+    # === Relationships === (עם ברירות מחדל כדי שלא יהיו חובה ב-__init__)
+    wallet: Mapped[Optional["Wallet"]] = relationship(
+        "Wallet", back_populates="user", uselist=False, cascade="all, delete-orphan", default=None
+    )
+    seller_profile: Mapped[Optional["SellerProfile"]] = relationship(
+        "SellerProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+        foreign_keys=lambda: [SellerProfile.user_id],
+        primaryjoin=lambda: User.id == SellerProfile.user_id,
+        default=None
+    )
+    transactions: Mapped[list["Transaction"]] = relationship(
+        "Transaction",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys=lambda: [Transaction.user_id],
+        primaryjoin=lambda: User.id == Transaction.user_id,
+        default_factory=list
+    )
+    fund_locks: Mapped[list["FundLock"]] = relationship(
+        "FundLock", back_populates="user", cascade="all, delete-orphan", default_factory=list
+    )
     
     # Indexes
     __table_args__ = (
