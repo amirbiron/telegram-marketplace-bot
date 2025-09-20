@@ -60,7 +60,7 @@ class Order(Base):
     id: Mapped[str] = mapped_column(
         String(36), 
         primary_key=True, 
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
     
@@ -69,32 +69,21 @@ class Order(Base):
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     coupon_id: Mapped[str] = mapped_column(ForeignKey("coupons.id", ondelete="CASCADE"))
     
-    # Order Details
-    quantity: Mapped[int] = mapped_column(Integer, default=1)
+    # Order Details (ללא ברירות מחדל קודם)
     unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))  # מחיר יחידה
     total_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))  # סה"כ לפני עמלות
     
-    # Financial Breakdown - תוספות חדשות חשובות
-    buyer_fee: Mapped[Decimal] = mapped_column(
-        Numeric(10, 2), default=Decimal('0.00')
-    )  # עמלת קונה
-    seller_fee: Mapped[Decimal] = mapped_column(
-        Numeric(10, 2), default=Decimal('0.00')  
-    )  # עמלת מוכר
-    seller_amount_gross: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2)
-    )  # סכום מוכר ברוטו (לפני עמלה)
-    seller_amount_net: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2)
-    )  # סכום מוכר נטו (אחרי עמלה)
+    # Financial Breakdown - שדות חובה לפני שדות עם ברירת מחדל
+    seller_amount_gross: Mapped[Decimal] = mapped_column(Numeric(12, 2))  # סכום מוכר ברוטו (לפני עמלה)
+    seller_amount_net: Mapped[Decimal] = mapped_column(Numeric(12, 2))    # סכום מוכר נטו (אחרי עמלה)
+    
     
     # Status & Timing - תוספות חדשות קריטיות
-    status: Mapped[OrderStatus] = mapped_column(ENUM(OrderStatus), default=OrderStatus.PENDING)
     
     # Timing Fields - חדש וחשוב!
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     purchased_at: Mapped[Optional[datetime]] = mapped_column(
@@ -129,19 +118,10 @@ class Order(Base):
     )
     resolution_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
-    # Delivery Info
+    # Delivery Info (ללא ברירת מחדל)
     coupon_data: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON
-    delivery_method: Mapped[str] = mapped_column(String(50), default="digital")
     delivered_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
-    )
-    
-    # Updated timestamp
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-        init=False
     )
     
     # === Relationships ===
@@ -150,6 +130,21 @@ class Order(Base):
     coupon: Mapped["Coupon"] = relationship("Coupon", back_populates="orders")
     resolved_by_admin: Mapped[Optional["User"]] = relationship(
         "User", foreign_keys=[resolved_by_admin_id]
+    )
+
+    # שדות עם ברירת מחדל (סוף המחלקה עבור dataclass)
+    quantity: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[OrderStatus] = mapped_column(ENUM(OrderStatus), default=OrderStatus.PENDING)
+    delivery_method: Mapped[str] = mapped_column(String(50), default="digital")
+    buyer_fee: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal('0.00'))  # עמלת קונה
+    seller_fee: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal('0.00'))  # עמלת מוכר
+
+    # Updated timestamp
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        init=False
     )
     
     # Indexes - חדש וחשוב לביצועים!
@@ -218,7 +213,7 @@ class Auction(Base):
     id: Mapped[str] = mapped_column(
         String(36), 
         primary_key=True, 
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
     
@@ -240,13 +235,7 @@ class Auction(Base):
         DateTime(timezone=True), nullable=True
     )  # הארכה אוטומטית
     
-    # Status
-    status: Mapped[AuctionStatus] = mapped_column(
-        ENUM(AuctionStatus), 
-        default=AuctionStatus.ACTIVE
-    )
-    
-    # Winner Info
+    # Winner Info (ללא ברירת מחדל)
     winner_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id"), nullable=True
     )
@@ -257,34 +246,38 @@ class Auction(Base):
         DateTime(timezone=True), nullable=True
     )
     
-    # Stats
-    total_bids: Mapped[int] = mapped_column(Integer, default=0)
-    unique_bidders: Mapped[int] = mapped_column(Integer, default=0)
-    
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
-        init=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-        init=False
-    )
-    
     # === Relationships ===
     seller: Mapped["User"] = relationship("User", foreign_keys=[seller_id])
     coupon: Mapped["Coupon"] = relationship("Coupon", back_populates="auctions")
     winner: Mapped[Optional["User"]] = relationship("User", foreign_keys=[winner_id])
     bids: Mapped[list["AuctionBid"]] = relationship(
-        "AuctionBid", back_populates="auction", cascade="all, delete-orphan"
+        "AuctionBid",
+        back_populates="auction",
+        cascade="all, delete-orphan",
+        primaryjoin="Auction.id==AuctionBid.auction_id"
     )
     winning_bid: Mapped[Optional["AuctionBid"]] = relationship(
         "AuctionBid", foreign_keys=[winning_bid_id]
     )
     
+    # Status (עם ברירת מחדל) ושדות סטטיסטיים עם ברירת מחדל
+    status: Mapped[AuctionStatus] = mapped_column(ENUM(AuctionStatus), default=AuctionStatus.ACTIVE)
+    total_bids: Mapped[int] = mapped_column(Integer, default=0)
+    unique_bidders: Mapped[int] = mapped_column(Integer, default=0)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default_factory=lambda: datetime.now(timezone.utc),
+        init=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        init=False
+    )
+
     # Indexes
     __table_args__ = (
         Index("idx_auctions_seller", "seller_id"),
@@ -332,35 +325,38 @@ class AuctionBid(Base):
     id: Mapped[str] = mapped_column(
         String(36), 
         primary_key=True, 
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
     
-    # Foreign Keys
+    # Foreign Keys (ללא ברירות מחדל קודם)
     auction_id: Mapped[str] = mapped_column(ForeignKey("auctions.id", ondelete="CASCADE"))
     bidder_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    fund_lock_id: Mapped[Optional[str]] = mapped_column(ForeignKey("fund_locks.id"), nullable=True)
     
     # Bid Details
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+
+    # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
+    auction: Mapped["Auction"] = relationship(
+        "Auction",
+        back_populates="bids",
+        primaryjoin="AuctionBid.auction_id==Auction.id",
+        foreign_keys=[auction_id]
+    )
+    bidder: Mapped["User"] = relationship("User")
+    fund_lock: Mapped[Optional["FundLock"]] = relationship("FundLock")
+
+    # Bid Flags (עם ברירות מחדל)
     is_winning: Mapped[bool] = mapped_column(Boolean, default=False)
     is_outbid: Mapped[bool] = mapped_column(Boolean, default=False)
-    
-    # Fund Lock Reference
-    fund_lock_id: Mapped[Optional[str]] = mapped_column(
-        ForeignKey("fund_locks.id"), nullable=True
-    )
-    
+
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
-    
-    # === Relationships ===
-    auction: Mapped["Auction"] = relationship("Auction", back_populates="bids")
-    bidder: Mapped["User"] = relationship("User")
-    fund_lock: Mapped[Optional["FundLock"]] = relationship("FundLock")
     
     # Indexes
     __table_args__ = (
@@ -418,7 +414,7 @@ def create_auction_order(auction: Auction, winning_bid: AuctionBid) -> Order:
     )
     
     # סימון שמקורו מכרז
-    order.metadata = f"auction:{auction.id}"
+    order.extra_metadata = f"auction:{auction.id}"
     
     return order
 

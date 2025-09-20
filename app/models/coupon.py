@@ -72,12 +72,12 @@ class CouponCategory(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
     )
@@ -102,15 +102,33 @@ class Coupon(Base):
     id: Mapped[str] = mapped_column(
         String(36),
         primary_key=True,
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
+    
+    # === Relationships (מיד אחרי ה-PK, לפני שדות עם ברירת מחדל) ===
+    seller: Mapped["User"] = relationship("User")
+    category: Mapped["CouponCategory"] = relationship("CouponCategory", back_populates="coupons")
+    
+    # Orders & Auctions
+    orders: Mapped[list["Order"]] = relationship(
+        "Order", back_populates="coupon", cascade="all, delete-orphan"
+    )
+    auctions: Mapped[list["Auction"]] = relationship(
+        "Auction", back_populates="coupon", cascade="all, delete-orphan"
+    )
+    
+    # Favorites & Notifications
+    favorites: Mapped[list["UserFavorite"]] = relationship(
+        "UserFavorite", back_populates="coupon", cascade="all, delete-orphan"
+    )
+
+    # === שדות חובה (ללא ברירת מחדל/nullable ב-init של dataclass) ===
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     # לפי הדרישה: להציב expires_at מוקדם
     expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    # שדות חובה נוספים
     category_id: Mapped[str] = mapped_column(ForeignKey("coupon_categories.id"))
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text)
@@ -177,31 +195,14 @@ class Coupon(Base):
     # Timestamps (excluded from __init__)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
-    )
-    
-    # === Relationships ===
-    seller: Mapped["User"] = relationship("User")
-    category: Mapped["CouponCategory"] = relationship("CouponCategory", back_populates="coupons")
-    
-    # Orders & Auctions
-    orders: Mapped[list["Order"]] = relationship(
-        "Order", back_populates="coupon", cascade="all, delete-orphan"
-    )
-    auctions: Mapped[list["Auction"]] = relationship(
-        "Auction", back_populates="coupon", cascade="all, delete-orphan"
-    )
-    
-    # Favorites & Notifications
-    favorites: Mapped[list["UserFavorite"]] = relationship(
-        "UserFavorite", back_populates="coupon", cascade="all, delete-orphan"
     )
     
     # Indexes
@@ -284,34 +285,36 @@ class UserFavorite(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     coupon_id: Mapped[str] = mapped_column(ForeignKey("coupons.id", ondelete="CASCADE"))
     
-    # Notification Preferences
-    notify_price_drop: Mapped[bool] = mapped_column(Boolean, default=True)
-    notify_similar: Mapped[bool] = mapped_column(Boolean, default=False)
-    notify_expiry: Mapped[bool] = mapped_column(Boolean, default=True)
-    
-    # Tracking
+    # Tracking - שדות חובה לפני שדות עם ברירת מחדל
     original_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))  # מחיר בזמן השמירה
-    price_alerts_sent: Mapped[int] = mapped_column(Integer, default=0)
     last_price_check: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
-    )
-    
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
-        init=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-        init=False
     )
     
     # === Relationships ===
     user: Mapped["User"] = relationship("User")
     coupon: Mapped["Coupon"] = relationship("Coupon", back_populates="favorites")
+    
+    # Notification Preferences (עם ברירות מחדל)
+    notify_price_drop: Mapped[bool] = mapped_column(Boolean, default=True)
+    notify_similar: Mapped[bool] = mapped_column(Boolean, default=False)
+    notify_expiry: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    # Counters (עם ברירת מחדל)
+    price_alerts_sent: Mapped[int] = mapped_column(Integer, default=0)
+    
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default_factory=lambda: datetime.now(timezone.utc),
+        init=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        init=False
+    )
     
     # Indexes & Constraints
     __table_args__ = (
@@ -339,32 +342,32 @@ class CouponRating(Base):
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
     
-    # Foreign Keys
+    # Foreign Keys (שדות חובה)
     order_id: Mapped[str] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"))
     buyer_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     coupon_id: Mapped[str] = mapped_column(ForeignKey("coupons.id", ondelete="CASCADE"))
     
-    # Rating Details
+    # Rating Details (חובה/nullable ללא ברירות מחדל)
     rating: Mapped[int] = mapped_column(Integer)  # 1-5 כוכבים
-    comment: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)  # עד 15 תווים כמו בדרישות
+    comment: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)  # עד 150 תווים
     
-    # Metadata
+    # === Relationships ===
+    order: Mapped["Order"] = relationship("Order", foreign_keys=[order_id])
+    buyer: Mapped["User"] = relationship("User", foreign_keys=[buyer_id])
+    seller: Mapped["User"] = relationship("User", foreign_keys=[seller_id])
+    coupon: Mapped["Coupon"] = relationship("Coupon", foreign_keys=[coupon_id])
+    
+    # Metadata (עם ברירות מחדל)
     is_public: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified_purchase: Mapped[bool] = mapped_column(Boolean, default=True)
     
-    # Timestamp
+    # Timestamp (מחוץ ל-__init__)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
-    
-    # === Relationships ===
-    order: Mapped["Order"] = relationship("Order")
-    buyer: Mapped["User"] = relationship("User", foreign_keys=[buyer_id])
-    seller: Mapped["User"] = relationship("User", foreign_keys=[seller_id])
-    coupon: Mapped["Coupon"] = relationship("Coupon")
     
     # Indexes & Constraints
     __table_args__ = (

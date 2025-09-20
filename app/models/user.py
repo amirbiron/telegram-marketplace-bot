@@ -66,45 +66,56 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
-    # Role & Status
-    role: Mapped[UserRole] = mapped_column(ENUM(UserRole), default=UserRole.BUYER)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
-    
-    # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
-        init=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-        init=False
-    )
-    last_activity_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), 
-        nullable=True
-    )
-    
-    # Contact Info (עבור מוכרים)
-    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    email: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    
-    # === Relationships ===
+    # === Relationships === (ללא ברירות מחדל – להופיע לפני שדות עם ברירת מחדל)
     wallet: Mapped[Optional["Wallet"]] = relationship(
         "Wallet", back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
     seller_profile: Mapped[Optional["SellerProfile"]] = relationship(
-        "SellerProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+        "SellerProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+        foreign_keys=lambda: [SellerProfile.user_id],
+        primaryjoin=lambda: User.id == SellerProfile.user_id
     )
     transactions: Mapped[list["Transaction"]] = relationship(
-        "Transaction", back_populates="user", cascade="all, delete-orphan"
+        "Transaction",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys=lambda: [Transaction.user_id],
+        primaryjoin=lambda: User.id == Transaction.user_id
     )
     fund_locks: Mapped[list["FundLock"]] = relationship(
         "FundLock", back_populates="user", cascade="all, delete-orphan"
     )
+    
+    # Contact Info (עבור מוכרים) - ללא ברירת מחדל
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    
+    # Timestamps / Status ordering
+    last_activity_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), 
+        nullable=True
+    )
+    role: Mapped[UserRole] = mapped_column(ENUM(UserRole), default=UserRole.BUYER)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default_factory=lambda: datetime.now(timezone.utc),
+        init=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        init=False
+    )
+    
+    # Contact Info הוזז למעלה
+    
+    # Relationships הוזזו למעלה
     
     # Indexes
     __table_args__ = (
@@ -128,49 +139,51 @@ class SellerProfile(Base):
     # Business Info
     business_name: Mapped[str] = mapped_column(String(200))
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
-    # Verification - תוספות חדשות
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
-    verification_status: Mapped[VerificationStatus] = mapped_column(
-        ENUM(VerificationStatus), 
-        default=VerificationStatus.UNVERIFIED
-    )
     verification_documents: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON
+    
+    # Non-default verification fields
     verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    verified_by_admin_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("users.id"), nullable=True
+    verified_by_admin_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
+    
+    # Non-default stats field (צריך להופיע לפני שדות עם ברירת מחדל)
+    average_rating: Mapped[Optional[Decimal]] = mapped_column(Numeric(3, 2), nullable=True)
+    
+    # === Relationships === (ללא ברירות מחדל – לפני שדות עם ברירת מחדל)
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="seller_profile",
+        foreign_keys=lambda: [SellerProfile.user_id],
+        primaryjoin=lambda: User.id == SellerProfile.user_id
     )
+
+    # Defaulted fields (לבסוף)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    verification_status: Mapped[VerificationStatus] = mapped_column(ENUM(VerificationStatus), default=VerificationStatus.UNVERIFIED)
     
     # Daily Limits - חדש
     daily_quota: Mapped[int] = mapped_column(Integer, default=10)  # 10 קופונים לליא מאומת
     daily_count: Mapped[int] = mapped_column(Integer, default=0)   # מונה נוכחי
     quota_reset_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        default_factory=lambda: datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     )
     
-    # Stats & Rating
+    # Stats & Rating (עם ברירות מחדל)
     total_sales: Mapped[int] = mapped_column(Integer, default=0)
-    average_rating: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(3, 2), nullable=True  # 0.00 - 5.00
-    )
     total_ratings: Mapped[int] = mapped_column(Integer, default=0)
     
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
     )
-    
-    # === Relationships ===
-    user: Mapped["User"] = relationship("User", back_populates="seller_profile")
     
     # Indexes
     __table_args__ = (
@@ -203,7 +216,16 @@ class Wallet(Base):
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
-    
+
+    # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
+    user: Mapped["User"] = relationship("User", back_populates="wallet")
+    transactions: Mapped[list["Transaction"]] = relationship(
+        "Transaction", back_populates="wallet", cascade="all, delete-orphan"
+    )
+    fund_locks: Mapped[list["FundLock"]] = relationship(
+        "FundLock", back_populates="wallet", cascade="all, delete-orphan"
+    )
+
     # יתרות - עדכון לפי הדרישות החדשות
     total_balance: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), default=Decimal('0.00')
@@ -211,27 +233,18 @@ class Wallet(Base):
     locked_balance: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), default=Decimal('0.00')
     )  # 🔒 יתרה קפואה (מכרזים + holds)
-    
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
-    )
-    
-    # === Relationships ===
-    user: Mapped["User"] = relationship("User", back_populates="wallet")
-    transactions: Mapped[list["Transaction"]] = relationship(
-        "Transaction", back_populates="wallet", cascade="all, delete-orphan"
-    )
-    fund_locks: Mapped[list["FundLock"]] = relationship(
-        "FundLock", back_populates="wallet", cascade="all, delete-orphan"
     )
     
     # Constraints
@@ -263,7 +276,7 @@ class Transaction(Base):
     id: Mapped[str] = mapped_column(
         String(36), 
         primary_key=True, 
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
     
@@ -283,25 +296,35 @@ class Transaction(Base):
     # Balances After Transaction
     balance_before: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     balance_after: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+
+    # Non-default optional fields (לפני ברירות מחדל)
+    extra_metadata: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON נוסף
+    processed_by_admin_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+    # === Relationships === (ללא ברירות מחדל – לפני שדות עם ברירת מחדל)
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="transactions",
+        foreign_keys=lambda: [Transaction.user_id],
+        primaryjoin=lambda: Transaction.user_id == User.id
+    )
+    wallet: Mapped["Wallet"] = relationship(
+        "Wallet",
+        back_populates="transactions",
+        foreign_keys=lambda: [Transaction.wallet_id],
+        primaryjoin=lambda: Transaction.wallet_id == Wallet.id
+    )
+
+    # Defaults
     locked_before: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal('0.00'))
     locked_after: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal('0.00'))
-    
-    # Metadata
-    metadata: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON נוסף
-    processed_by_admin_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("users.id"), nullable=True
-    )
     
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
-    
-    # === Relationships ===
-    user: Mapped["User"] = relationship("User", back_populates="transactions")
-    wallet: Mapped["Wallet"] = relationship("Wallet", back_populates="transactions")
     
     # Indexes
     __table_args__ = (
@@ -324,7 +347,7 @@ class FundLock(Base):
     id: Mapped[str] = mapped_column(
         String(36), 
         primary_key=True, 
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
     
@@ -340,25 +363,27 @@ class FundLock(Base):
     reference_type: Mapped[str] = mapped_column(String(50))  # "auction", "order"
     reference_id: Mapped[str] = mapped_column(String(100))
     
-    # Status & Timing
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Status & Timing (שדות ללא ברירת מחדל לפני עם ברירת מחדל)
     expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
-    )
-    
-    # Timestamps
-    locked_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
-        init=False
     )
     released_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    
-    # === Relationships ===
+
+    # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
     user: Mapped["User"] = relationship("User", back_populates="fund_locks")
     wallet: Mapped["Wallet"] = relationship("Wallet", back_populates="fund_locks")
+
+    # שדות עם ברירת מחדל
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    # Timestamps
+    locked_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default_factory=lambda: datetime.now(timezone.utc),
+        init=False
+    )
     
     # Indexes
     __table_args__ = (

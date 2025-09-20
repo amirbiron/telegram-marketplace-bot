@@ -144,7 +144,7 @@ class WalletService:
             description=description,
             reference_type=reference_type,
             reference_id=reference_id,
-            metadata=metadata,
+            extra_metadata=metadata,
             processed_by_admin_id=admin_id,
             balance_before=balance_before,
             balance_after=wallet.total_balance,
