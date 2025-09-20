@@ -333,20 +333,22 @@ class AuctionBid(Base):
     
     # Bid Details
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+
+    # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
+    auction: Mapped["Auction"] = relationship("Auction", back_populates="bids")
+    bidder: Mapped["User"] = relationship("User")
+    fund_lock: Mapped[Optional["FundLock"]] = relationship("FundLock")
+
+    # Bid Flags (עם ברירות מחדל)
     is_winning: Mapped[bool] = mapped_column(Boolean, default=False)
     is_outbid: Mapped[bool] = mapped_column(Boolean, default=False)
-    
+
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
         default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
-    
-    # === Relationships ===
-    auction: Mapped["Auction"] = relationship("Auction", back_populates="bids")
-    bidder: Mapped["User"] = relationship("User")
-    fund_lock: Mapped[Optional["FundLock"]] = relationship("FundLock")
     
     # Indexes
     __table_args__ = (

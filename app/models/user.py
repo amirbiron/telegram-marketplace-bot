@@ -132,13 +132,13 @@ class SellerProfile(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     verification_documents: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON
     
-    # Verification - תוספות חדשות (עם ברירות מחדל)
+    # Verification - סדר: שדות ללא ברירת מחדל לפני ברירת מחדל
+    verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     verification_status: Mapped[VerificationStatus] = mapped_column(
         ENUM(VerificationStatus), 
         default=VerificationStatus.UNVERIFIED
     )
-    verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     verified_by_admin_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id"), nullable=True
     )
