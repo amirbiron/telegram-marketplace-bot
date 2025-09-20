@@ -71,7 +71,12 @@ class User(Base):
         "Wallet", back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
     seller_profile: Mapped[Optional["SellerProfile"]] = relationship(
-        "SellerProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+        "SellerProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+        foreign_keys=lambda: [SellerProfile.user_id],
+        primaryjoin=lambda: User.id == SellerProfile.user_id
     )
     transactions: Mapped[list["Transaction"]] = relationship(
         "Transaction", back_populates="user", cascade="all, delete-orphan"
@@ -140,7 +145,12 @@ class SellerProfile(Base):
     average_rating: Mapped[Optional[Decimal]] = mapped_column(Numeric(3, 2), nullable=True)
     
     # === Relationships === (ללא ברירות מחדל – לפני שדות עם ברירת מחדל)
-    user: Mapped["User"] = relationship("User", back_populates="seller_profile")
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="seller_profile",
+        foreign_keys=lambda: [SellerProfile.user_id],
+        primaryjoin=lambda: User.id == SellerProfile.user_id
+    )
 
     # Defaulted fields (לבסוף)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
