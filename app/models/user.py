@@ -202,7 +202,16 @@ class Wallet(Base):
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
-    
+
+    # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
+    user: Mapped["User"] = relationship("User", back_populates="wallet")
+    transactions: Mapped[list["Transaction"]] = relationship(
+        "Transaction", back_populates="wallet", cascade="all, delete-orphan"
+    )
+    fund_locks: Mapped[list["FundLock"]] = relationship(
+        "FundLock", back_populates="wallet", cascade="all, delete-orphan"
+    )
+
     # יתרות - עדכון לפי הדרישות החדשות
     total_balance: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), default=Decimal('0.00')
@@ -210,27 +219,18 @@ class Wallet(Base):
     locked_balance: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), default=Decimal('0.00')
     )  # 🔒 יתרה קפואה (מכרזים + holds)
-    
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
-    )
-    
-    # === Relationships ===
-    user: Mapped["User"] = relationship("User", back_populates="wallet")
-    transactions: Mapped[list["Transaction"]] = relationship(
-        "Transaction", back_populates="wallet", cascade="all, delete-orphan"
-    )
-    fund_locks: Mapped[list["FundLock"]] = relationship(
-        "FundLock", back_populates="wallet", cascade="all, delete-orphan"
     )
     
     # Constraints
