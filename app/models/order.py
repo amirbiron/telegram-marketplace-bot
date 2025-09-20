@@ -326,19 +326,15 @@ class AuctionBid(Base):
         init=False
     )
     
-    # Foreign Keys
+    # Foreign Keys (ללא ברירות מחדל קודם)
     auction_id: Mapped[str] = mapped_column(ForeignKey("auctions.id", ondelete="CASCADE"))
     bidder_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    fund_lock_id: Mapped[Optional[str]] = mapped_column(ForeignKey("fund_locks.id"), nullable=True)
     
     # Bid Details
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2))
     is_winning: Mapped[bool] = mapped_column(Boolean, default=False)
     is_outbid: Mapped[bool] = mapped_column(Boolean, default=False)
-    
-    # Fund Lock Reference
-    fund_lock_id: Mapped[Optional[str]] = mapped_column(
-        ForeignKey("fund_locks.id"), nullable=True
-    )
     
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(

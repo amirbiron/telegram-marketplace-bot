@@ -130,14 +130,14 @@ class SellerProfile(Base):
     # Business Info
     business_name: Mapped[str] = mapped_column(String(200))
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    verification_documents: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON
     
-    # Verification - תוספות חדשות
+    # Verification - תוספות חדשות (עם ברירות מחדל)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     verification_status: Mapped[VerificationStatus] = mapped_column(
         ENUM(VerificationStatus), 
         default=VerificationStatus.UNVERIFIED
     )
-    verification_documents: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON
     verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     verified_by_admin_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id"), nullable=True
@@ -148,7 +148,7 @@ class SellerProfile(Base):
     daily_count: Mapped[int] = mapped_column(Integer, default=0)   # מונה נוכחי
     quota_reset_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        default_factory=lambda: datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     )
     
     # Stats & Rating
@@ -161,12 +161,12 @@ class SellerProfile(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
     )
