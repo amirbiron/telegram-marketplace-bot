@@ -132,16 +132,16 @@ class SellerProfile(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     verification_documents: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON
     
-    # Verification - סדר: שדות ללא ברירת מחדל לפני ברירת מחדל
+    # Non-default verification fields
     verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    verified_by_admin_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
+    
+    # Non-default stats field (צריך להופיע לפני שדות עם ברירת מחדל)
+    average_rating: Mapped[Optional[Decimal]] = mapped_column(Numeric(3, 2), nullable=True)
+    
+    # Defaulted fields (לבסוף)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
-    verification_status: Mapped[VerificationStatus] = mapped_column(
-        ENUM(VerificationStatus), 
-        default=VerificationStatus.UNVERIFIED
-    )
-    verified_by_admin_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("users.id"), nullable=True
-    )
+    verification_status: Mapped[VerificationStatus] = mapped_column(ENUM(VerificationStatus), default=VerificationStatus.UNVERIFIED)
     
     # Daily Limits - חדש
     daily_quota: Mapped[int] = mapped_column(Integer, default=10)  # 10 קופונים לליא מאומת
@@ -151,11 +151,8 @@ class SellerProfile(Base):
         default_factory=lambda: datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     )
     
-    # Stats & Rating
+    # Stats & Rating (עם ברירות מחדל)
     total_sales: Mapped[int] = mapped_column(Integer, default=0)
-    average_rating: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(3, 2), nullable=True  # 0.00 - 5.00
-    )
     total_ratings: Mapped[int] = mapped_column(Integer, default=0)
     
     # Timestamps
