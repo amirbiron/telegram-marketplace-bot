@@ -119,18 +119,6 @@ class Coupon(Base):
     selling_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))   # מחיר מכירה
     discount_percent: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # אחוז הנחה
     
-    # Type & Availability
-    coupon_type: Mapped[CouponType] = mapped_column(
-        ENUM(CouponType), 
-        default=CouponType.REGULAR
-    )
-    status: Mapped[CouponStatus] = mapped_column(
-        ENUM(CouponStatus), 
-        default=CouponStatus.DRAFT
-    )
-    quantity: Mapped[int] = mapped_column(Integer, default=1)
-    quantity_sold: Mapped[int] = mapped_column(Integer, default=0)
-    
     # Validity
     expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -161,16 +149,35 @@ class Coupon(Base):
     location_city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     location_address: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
     
-    # Stats & Performance
+    # Admin Notes
+    admin_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    
+    # Publication
+    published_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    
+    # Type & Availability (with defaults)
+    coupon_type: Mapped[CouponType] = mapped_column(
+        ENUM(CouponType), 
+        default=CouponType.REGULAR
+    )
+    status: Mapped[CouponStatus] = mapped_column(
+        ENUM(CouponStatus), 
+        default=CouponStatus.DRAFT
+    )
+    quantity: Mapped[int] = mapped_column(Integer, default=1)
+    quantity_sold: Mapped[int] = mapped_column(Integer, default=0)
+    
+    # Stats & Performance (with defaults)
     view_count: Mapped[int] = mapped_column(Integer, default=0)
     favorite_count: Mapped[int] = mapped_column(Integer, default=0)
     inquiry_count: Mapped[int] = mapped_column(Integer, default=0)
     
-    # Admin Notes
-    admin_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Featured flag
     is_featured: Mapped[bool] = mapped_column(Boolean, default=False)
     
-    # Timestamps
+    # Timestamps (excluded from __init__)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
         default=lambda: datetime.now(timezone.utc),
@@ -181,9 +188,6 @@ class Coupon(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
-    )
-    published_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
     )
     
     # === Relationships ===
