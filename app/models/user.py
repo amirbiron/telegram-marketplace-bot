@@ -343,6 +343,9 @@ class FundLock(Base):
     expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    released_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     
     # Timestamps
@@ -351,9 +354,7 @@ class FundLock(Base):
         default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
-    released_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    
     
     # === Relationships ===
     user: Mapped["User"] = relationship("User", back_populates="fund_locks")
