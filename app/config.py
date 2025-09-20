@@ -112,9 +112,9 @@ class Settings(BaseSettings):
 
     @validator("DATABASE_URL")
     def validate_database_url(cls, v):
-        """וידוא כתובת מסד נתונים תקינה"""
-        if not v.startswith(("postgresql://", "postgresql+asyncpg://")):
-            raise ValueError("DATABASE_URL must be a PostgreSQL connection string")
+        """וידוא שהכתובת משתמשת בדרייבר asyncpg בלבד"""
+        if not isinstance(v, str) or not v.startswith("postgresql+asyncpg://"):
+            raise ValueError("DATABASE_URL must start with 'postgresql+asyncpg://' (async driver)")
         return v
     
     @property
