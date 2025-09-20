@@ -1,0 +1,41 @@
+# Core Dependencies - עדכני לספטמבר 2025
+
+# טלגרם בוט - הגרסה היציבה האחרונה
+python-telegram-bot[ext]==22.4
+
+# FastAPI ו-Web Framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+gunicorn==23.0.0
+
+# מסד נתונים - SQLAlchemy 2.0 + Async PostgreSQL
+sqlalchemy[asyncio]==2.0.35
+asyncpg==0.29.0
+alembic==1.13.3
+psycopg2-binary==2.9.9
+
+# הגדרות ו-Environment Variables
+pydantic-settings==2.5.2
+python-dotenv==1.0.1
+
+# יצירת PDF ו-QR קודים
+qrcode[pil]==7.4.2
+reportlab==4.2.2
+Pillow==10.4.0
+
+# HTTP Client ועזר
+httpx==0.27.2
+python-multipart==0.0.9
+
+# אבטחה והצפנה
+bcrypt==4.2.0
+python-jose[cryptography]==3.3.0
+cryptography>=41.0.0
+
+# לוגים ומעקב
+structlog==24.4.0
+python-json-logger==2.0.7
+
+# עזר כללי
+python-dateutil==2.9.0
+pytz==2024.1
