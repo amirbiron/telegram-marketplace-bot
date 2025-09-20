@@ -406,7 +406,7 @@ def create_auction_order(auction: Auction, winning_bid: AuctionBid) -> Order:
     )
     
     # סימון שמקורו מכרז
-    order.metadata = f"auction:{auction.id}"
+    order.extra_metadata = f"auction:{auction.id}"
     
     return order
 
