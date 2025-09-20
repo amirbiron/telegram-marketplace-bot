@@ -94,7 +94,7 @@ class User(Base):
     
     # Contact Info הוזז למעלה
     
-    # === Relationships ===
+    # === Relationships === (ללא ברירות מחדל – להופיע לפני שדות עם ברירת מחדל)
     wallet: Mapped[Optional["Wallet"]] = relationship(
         "Wallet", back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
