@@ -10,7 +10,7 @@ from typing import List, Dict, Optional
 from decimal import Decimal
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, update
@@ -39,7 +39,7 @@ class SchedulerService:
         """הגדרת APScheduler עם PostgreSQL jobstore"""
         
         jobstores = {
-            'default': SQLAlchemyJobStore(url=settings.database_url_sync)
+            'default': MemoryJobStore()
         }
         
         executors = {
