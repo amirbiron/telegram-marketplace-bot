@@ -74,6 +74,13 @@ class DatabaseManager:
                 }
             )
             
+            # לוג: איזה דרייבר נטען בפועל
+            try:
+                driver = self.engine.sync_engine.dialect.driver
+                logger.info(f"🧩 Database driver in use: {driver}")
+            except Exception:
+                logger.info("🧩 Database driver in use: unknown")
+            
             # יצירת Session Maker
             self.async_session_maker = async_sessionmaker(
                 self.engine,
@@ -119,7 +126,8 @@ class DatabaseManager:
         try:
             async with self.engine.connect() as conn:
                 result = await conn.execute(text("SELECT 1"))
-                await result.fetchone()
+                # Row הוא אובייקט סינכרוני, אין להשתמש ב-await
+                result.fetchone()
             logger.info("🏓 Database ping successful")
             return True
             

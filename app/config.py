@@ -105,11 +105,18 @@ class Settings(BaseSettings):
     
     @validator("DATABASE_URL", pre=True)
     def coerce_database_url_to_asyncpg(cls, v):
-        """המרת postgresql:// ל-postgresql+asyncpg:// לשימוש אסינכרוני"""
-        if isinstance(v, str) and v.startswith("postgresql://"):
-            return "postgresql+asyncpg://" + v[len("postgresql://"):]
-        return v
-
+        """המרת URL לפורמט asyncpg: תומך ב-postgresql://, postgres:// ו-postgresql+psycopg2://"""
+        if not isinstance(v, str):
+            return v
+        url = v
+        if url.startswith("postgres://"):
+            url = "postgresql://" + url[len("postgres://"):]
+        if url.startswith("postgresql+psycopg2://"):
+            url = "postgresql+asyncpg://" + url[len("postgresql+psycopg2://"):]
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+asyncpg://"):
+            url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+        return url
+    
     @validator("DATABASE_URL")
     def validate_database_url(cls, v):
         """וידוא שהכתובת משתמשת בדרייבר asyncpg בלבד"""
