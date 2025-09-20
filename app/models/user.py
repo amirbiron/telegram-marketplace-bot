@@ -9,7 +9,7 @@ from typing import Optional
 from decimal import Decimal
 
 from sqlalchemy import (
-    String, Integer, Boolean, DateTime, Numeric, Text,
+    String, Integer, BigInteger, Boolean, DateTime, Numeric, Text,
     ForeignKey, Index, CheckConstraint, UniqueConstraint
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -61,7 +61,7 @@ class User(Base):
     
     # Basic Info
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    telegram_user_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     username: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
