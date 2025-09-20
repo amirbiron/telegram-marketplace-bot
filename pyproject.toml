@@ -58,10 +58,6 @@ dev = [
     "pre-commit==3.8.0",
 ]
 
-production = [
-    "psycopg2-binary==2.9.9",  # עבור production
-]
-
 [project.urls]
 Homepage = "https://github.com/yourusername/telegram-marketplace-bot"
 Repository = "https://github.com/yourusername/telegram-marketplace-bot"
