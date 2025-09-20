@@ -251,7 +251,10 @@ class Auction(Base):
     coupon: Mapped["Coupon"] = relationship("Coupon", back_populates="auctions")
     winner: Mapped[Optional["User"]] = relationship("User", foreign_keys=[winner_id])
     bids: Mapped[list["AuctionBid"]] = relationship(
-        "AuctionBid", back_populates="auction", cascade="all, delete-orphan"
+        "AuctionBid",
+        back_populates="auction",
+        cascade="all, delete-orphan",
+        primaryjoin="Auction.id==AuctionBid.auction_id"
     )
     winning_bid: Mapped[Optional["AuctionBid"]] = relationship(
         "AuctionBid", foreign_keys=[winning_bid_id]
@@ -335,7 +338,12 @@ class AuctionBid(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2))
 
     # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
-    auction: Mapped["Auction"] = relationship("Auction", back_populates="bids")
+    auction: Mapped["Auction"] = relationship(
+        "Auction",
+        back_populates="bids",
+        primaryjoin="AuctionBid.auction_id==Auction.id",
+        foreign_keys=[auction_id]
+    )
     bidder: Mapped["User"] = relationship("User")
     fund_lock: Mapped[Optional["FundLock"]] = relationship("FundLock")
 
