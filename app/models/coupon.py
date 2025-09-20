@@ -105,12 +105,30 @@ class Coupon(Base):
         default=lambda: str(uuid.uuid4()),
         init=False
     )
+    
+    # === Relationships (מיד אחרי ה-PK, לפני שדות עם ברירת מחדל) ===
+    seller: Mapped["User"] = relationship("User")
+    category: Mapped["CouponCategory"] = relationship("CouponCategory", back_populates="coupons")
+    
+    # Orders & Auctions
+    orders: Mapped[list["Order"]] = relationship(
+        "Order", back_populates="coupon", cascade="all, delete-orphan"
+    )
+    auctions: Mapped[list["Auction"]] = relationship(
+        "Auction", back_populates="coupon", cascade="all, delete-orphan"
+    )
+    
+    # Favorites & Notifications
+    favorites: Mapped[list["UserFavorite"]] = relationship(
+        "UserFavorite", back_populates="coupon", cascade="all, delete-orphan"
+    )
+
+    # === שדות חובה (ללא ברירת מחדל/nullable ב-init של dataclass) ===
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     # לפי הדרישה: להציב expires_at מוקדם
     expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    # שדות חובה נוספים
     category_id: Mapped[str] = mapped_column(ForeignKey("coupon_categories.id"))
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text)
@@ -185,23 +203,6 @@ class Coupon(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
-    )
-    
-    # === Relationships ===
-    seller: Mapped["User"] = relationship("User")
-    category: Mapped["CouponCategory"] = relationship("CouponCategory", back_populates="coupons")
-    
-    # Orders & Auctions
-    orders: Mapped[list["Order"]] = relationship(
-        "Order", back_populates="coupon", cascade="all, delete-orphan"
-    )
-    auctions: Mapped[list["Auction"]] = relationship(
-        "Auction", back_populates="coupon", cascade="all, delete-orphan"
-    )
-    
-    # Favorites & Notifications
-    favorites: Mapped[list["UserFavorite"]] = relationship(
-        "UserFavorite", back_populates="coupon", cascade="all, delete-orphan"
     )
     
     # Indexes
