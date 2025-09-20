@@ -53,6 +53,10 @@ class CouponCategory(Base):
     __tablename__ = "coupon_categories"
     
     id: Mapped[str] = mapped_column(String(50), primary_key=True)  # "food", "fashion", etc.
+    # === Relationships ===
+    coupons: Mapped[list["Coupon"]] = relationship(
+        "Coupon", back_populates="category", cascade="all, delete-orphan"
+    )
     name_he: Mapped[str] = mapped_column(String(100))  # "🍕 מסעדות ואוכל"
     name_en: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -78,10 +82,7 @@ class CouponCategory(Base):
         init=False
     )
     
-    # === Relationships ===
-    coupons: Mapped[list["Coupon"]] = relationship(
-        "Coupon", back_populates="category", cascade="all, delete-orphan"
-    )
+    
     
     # Indexes
     __table_args__ = (
