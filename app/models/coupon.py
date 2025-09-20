@@ -291,6 +291,10 @@ class UserFavorite(Base):
         DateTime(timezone=True), nullable=True
     )
     
+    # === Relationships ===
+    user: Mapped["User"] = relationship("User")
+    coupon: Mapped["Coupon"] = relationship("Coupon", back_populates="favorites")
+    
     # Notification Preferences (עם ברירות מחדל)
     notify_price_drop: Mapped[bool] = mapped_column(Boolean, default=True)
     notify_similar: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -311,10 +315,6 @@ class UserFavorite(Base):
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
     )
-    
-    # === Relationships ===
-    user: Mapped["User"] = relationship("User")
-    coupon: Mapped["Coupon"] = relationship("Coupon", back_populates="favorites")
     
     # Indexes & Constraints
     __table_args__ = (

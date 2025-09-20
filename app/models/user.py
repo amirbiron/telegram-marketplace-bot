@@ -66,16 +66,16 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
-    # Role & Status
-    role: Mapped[UserRole] = mapped_column(ENUM(UserRole), default=UserRole.BUYER)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Role & Status (שדות עם ברירת מחדל יבואו אחרי last_activity_at)
     
     # Timestamps - שדה ללא ברירת מחדל לפני שדות עם ברירת מחדל
     last_activity_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), 
         nullable=True
     )
+    role: Mapped[UserRole] = mapped_column(ENUM(UserRole), default=UserRole.BUYER)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
         default_factory=lambda: datetime.now(timezone.utc),

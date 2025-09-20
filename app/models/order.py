@@ -71,8 +71,8 @@ class Order(Base):
     
     # Order Details
     unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))  # מחיר יחידה
-    quantity: Mapped[int] = mapped_column(Integer, default=1)
     total_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))  # סה"כ לפני עמלות
+    quantity: Mapped[int] = mapped_column(Integer, default=1)
     
     # Financial Breakdown - תוספות חדשות חשובות
     buyer_fee: Mapped[Decimal] = mapped_column(
