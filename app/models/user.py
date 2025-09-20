@@ -323,7 +323,7 @@ class FundLock(Base):
     id: Mapped[str] = mapped_column(
         String(36), 
         primary_key=True, 
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
     
@@ -339,16 +339,16 @@ class FundLock(Base):
     reference_type: Mapped[str] = mapped_column(String(50))  # "auction", "order"
     reference_id: Mapped[str] = mapped_column(String(100))
     
-    # Status & Timing
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Status & Timing (שדות ללא ברירת מחדל לפני עם ברירת מחדל)
     expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     
     # Timestamps
     locked_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     released_at: Mapped[Optional[datetime]] = mapped_column(
