@@ -287,6 +287,10 @@ class Transaction(Base):
     metadata: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON נוסף
     processed_by_admin_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
 
+    # === Relationships === (ללא ברירות מחדל – לפני שדות עם ברירת מחדל)
+    user: Mapped["User"] = relationship("User", back_populates="transactions")
+    wallet: Mapped["Wallet"] = relationship("Wallet", back_populates="transactions")
+
     # Defaults
     locked_before: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal('0.00'))
     locked_after: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal('0.00'))
@@ -297,10 +301,6 @@ class Transaction(Base):
         default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
-    
-    # === Relationships ===
-    user: Mapped["User"] = relationship("User", back_populates="transactions")
-    wallet: Mapped["Wallet"] = relationship("Wallet", back_populates="transactions")
     
     # Indexes
     __table_args__ = (
