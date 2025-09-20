@@ -262,7 +262,7 @@ class Transaction(Base):
     id: Mapped[str] = mapped_column(
         String(36), 
         primary_key=True, 
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
     
@@ -282,19 +282,19 @@ class Transaction(Base):
     # Balances After Transaction
     balance_before: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     balance_after: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+
+    # Non-default optional fields (לפני ברירות מחדל)
+    metadata: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON נוסף
+    processed_by_admin_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+    # Defaults
     locked_before: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal('0.00'))
     locked_after: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal('0.00'))
-    
-    # Metadata
-    metadata: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON נוסף
-    processed_by_admin_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("users.id"), nullable=True
-    )
     
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     
