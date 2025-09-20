@@ -346,6 +346,12 @@ class FundLock(Base):
     released_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+    # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
+    user: Mapped["User"] = relationship("User", back_populates="fund_locks")
+    wallet: Mapped["Wallet"] = relationship("Wallet", back_populates="fund_locks")
+
+    # שדות עם ברירת מחדל
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     
     # Timestamps
@@ -354,11 +360,6 @@ class FundLock(Base):
         default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
-    
-    
-    # === Relationships ===
-    user: Mapped["User"] = relationship("User", back_populates="fund_locks")
-    wallet: Mapped["Wallet"] = relationship("Wallet", back_populates="fund_locks")
     
     # Indexes
     __table_args__ = (
