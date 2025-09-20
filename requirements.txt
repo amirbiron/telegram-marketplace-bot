@@ -8,10 +8,11 @@ fastapi==0.115.0
 uvicorn[standard]==0.30.6
 gunicorn==23.0.0
 
-# מסד נתונים - SQLAlchemy 2.0 + Async PostgreSQL (ללא psycopg2)
+# מסד נתונים - SQLAlchemy 2.0 + Async PostgreSQL + Alembic
 sqlalchemy[asyncio]==2.0.35
 asyncpg==0.29.0
 alembic==1.13.3
+psycopg[binary]==3.2.3
 
 # הגדרות ו-Environment Variables
 pydantic-settings==2.5.2
