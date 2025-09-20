@@ -71,21 +71,21 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
     
-    # Timestamps
+    # Timestamps - שדה ללא ברירת מחדל לפני שדות עם ברירת מחדל
+    last_activity_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), 
+        nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
-    )
-    last_activity_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), 
-        nullable=True
     )
     
     # Contact Info (עבור מוכרים)

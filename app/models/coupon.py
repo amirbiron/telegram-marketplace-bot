@@ -72,12 +72,12 @@ class CouponCategory(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
     )
@@ -102,7 +102,7 @@ class Coupon(Base):
     id: Mapped[str] = mapped_column(
         String(36),
         primary_key=True,
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
     
@@ -195,12 +195,12 @@ class Coupon(Base):
     # Timestamps (excluded from __init__)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
     )
@@ -285,27 +285,29 @@ class UserFavorite(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     coupon_id: Mapped[str] = mapped_column(ForeignKey("coupons.id", ondelete="CASCADE"))
     
-    # Notification Preferences
-    notify_price_drop: Mapped[bool] = mapped_column(Boolean, default=True)
-    notify_similar: Mapped[bool] = mapped_column(Boolean, default=False)
-    notify_expiry: Mapped[bool] = mapped_column(Boolean, default=True)
-    
-    # Tracking
+    # Tracking - שדות חובה לפני שדות עם ברירת מחדל
     original_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))  # מחיר בזמן השמירה
-    price_alerts_sent: Mapped[int] = mapped_column(Integer, default=0)
     last_price_check: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     
+    # Notification Preferences (עם ברירות מחדל)
+    notify_price_drop: Mapped[bool] = mapped_column(Boolean, default=True)
+    notify_similar: Mapped[bool] = mapped_column(Boolean, default=False)
+    notify_expiry: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    # Counters (עם ברירת מחדל)
+    price_alerts_sent: Mapped[int] = mapped_column(Integer, default=0)
+    
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
     )

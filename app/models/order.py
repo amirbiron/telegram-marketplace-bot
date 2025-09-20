@@ -60,7 +60,7 @@ class Order(Base):
     id: Mapped[str] = mapped_column(
         String(36), 
         primary_key=True, 
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
     
@@ -70,8 +70,8 @@ class Order(Base):
     coupon_id: Mapped[str] = mapped_column(ForeignKey("coupons.id", ondelete="CASCADE"))
     
     # Order Details
-    quantity: Mapped[int] = mapped_column(Integer, default=1)
     unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2))  # מחיר יחידה
+    quantity: Mapped[int] = mapped_column(Integer, default=1)
     total_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))  # סה"כ לפני עמלות
     
     # Financial Breakdown - תוספות חדשות חשובות
@@ -94,7 +94,7 @@ class Order(Base):
     # Timing Fields - חדש וחשוב!
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     purchased_at: Mapped[Optional[datetime]] = mapped_column(
@@ -139,7 +139,7 @@ class Order(Base):
     # Updated timestamp
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
     )
@@ -218,7 +218,7 @@ class Auction(Base):
     id: Mapped[str] = mapped_column(
         String(36), 
         primary_key=True, 
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
     
@@ -264,12 +264,12 @@ class Auction(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         init=False
     )
@@ -332,7 +332,7 @@ class AuctionBid(Base):
     id: Mapped[str] = mapped_column(
         String(36), 
         primary_key=True, 
-        default=lambda: str(uuid.uuid4()),
+        default_factory=lambda: str(uuid.uuid4()),
         init=False
     )
     
@@ -353,7 +353,7 @@ class AuctionBid(Base):
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
         init=False
     )
     
