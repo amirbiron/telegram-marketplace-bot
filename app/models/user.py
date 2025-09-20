@@ -79,7 +79,11 @@ class User(Base):
         primaryjoin=lambda: User.id == SellerProfile.user_id
     )
     transactions: Mapped[list["Transaction"]] = relationship(
-        "Transaction", back_populates="user", cascade="all, delete-orphan"
+        "Transaction",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys=lambda: [Transaction.user_id],
+        primaryjoin=lambda: User.id == Transaction.user_id
     )
     fund_locks: Mapped[list["FundLock"]] = relationship(
         "FundLock", back_populates="user", cascade="all, delete-orphan"
@@ -298,8 +302,18 @@ class Transaction(Base):
     processed_by_admin_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     # === Relationships === (ללא ברירות מחדל – לפני שדות עם ברירת מחדל)
-    user: Mapped["User"] = relationship("User", back_populates="transactions")
-    wallet: Mapped["Wallet"] = relationship("Wallet", back_populates="transactions")
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="transactions",
+        foreign_keys=lambda: [Transaction.user_id],
+        primaryjoin=lambda: Transaction.user_id == User.id
+    )
+    wallet: Mapped["Wallet"] = relationship(
+        "Wallet",
+        back_populates="transactions",
+        foreign_keys=lambda: [Transaction.wallet_id],
+        primaryjoin=lambda: Transaction.wallet_id == Wallet.id
+    )
 
     # Defaults
     locked_before: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal('0.00'))
