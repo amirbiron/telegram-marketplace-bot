@@ -67,6 +67,19 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
+    # === Relationships (non-default) ===
+    wallets: Mapped[list["Wallet"]] = relationship(
+        "Wallet",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    seller_profile: Mapped["SellerProfile"] = relationship(
+        "SellerProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    
     # Contact Info (עבור מוכרים) - שדות אופציונליים
     phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, default=None)
     email: Mapped[Optional[str]] = mapped_column(String(200), nullable=True, default=None)
@@ -92,18 +105,6 @@ class User(Base):
         init=False
     )
     
-    # === Relationships ===
-    wallets: Mapped[list["Wallet"]] = relationship(
-        "Wallet",
-        back_populates="user",
-        cascade="all, delete-orphan"
-    )
-    seller_profile: Mapped["SellerProfile"] = relationship(
-        "SellerProfile",
-        back_populates="user",
-        uselist=False,
-        cascade="all, delete-orphan"
-    )
     transactions: Mapped[list["Transaction"]] = relationship(
         "Transaction",
         back_populates="user",
