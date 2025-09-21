@@ -214,7 +214,7 @@ class MainHandlers:
                 session.add(new_user)
                 await session.flush()
                 
-                # יצירת פרופיל מוכר
+                # יצירת פרופיל מוכר (אחרי שה-user נשמר וקיבל id)
                 seller_profile = SellerProfile(
                     user_id=new_user.id,
                     business_name=f"עסק של {new_user.first_name}",  # זמני
@@ -228,10 +228,11 @@ class MainHandlers:
                 )
                 
                 session.add(seller_profile)
+                await session.flush()
                 
-                # יצירת ארנק
+                # יצירת ארנק (אחרי שה-user נשמר)
                 wallet_service = WalletService(session)
-                wallet = await wallet_service.create_wallet(new_user.id)
+                wallet = await wallet_service.create_wallet(user_id=new_user.id)
                 
                 await session.commit()
                 

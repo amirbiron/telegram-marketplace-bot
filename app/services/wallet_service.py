@@ -45,8 +45,19 @@ class WalletService:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
     
-    async def create_wallet(self, user_id: int) -> Wallet:
-        """יצירת ארנק חדש"""
+    async def create_wallet(self, user_id: Optional[int] = None, user: Optional[User] = None) -> Wallet:
+        """יצירת ארנק חדש. ניתן להעביר user_id או user (אם יש relationship)."""
+        # אם עבר אובייקט משתמש ולא נשמר עדיין, נשמור ונרענן כדי לקבל id
+        if user is not None:
+            # הוספת המשתמש ו-flush להבטחת user.id
+            self.session.add(user)
+            await self.session.flush()
+            user_id = user.id
+
+        if user_id is None:
+            raise ValueError("create_wallet requires either user_id or user with a valid id")
+
+        # יצירת הארנק לאחר שה-user_id קיים במסד
         wallet = Wallet(
             user_id=user_id,
             transactions=[],
@@ -56,6 +67,8 @@ class WalletService:
         )
         self.session.add(wallet)
         await self.session.flush()
+        # שמירה בפועל במסד
+        await self.session.commit()
         return wallet
     
     async def get_or_create_wallet(self, user_id: int) -> Wallet:
