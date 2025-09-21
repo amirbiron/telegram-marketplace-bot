@@ -154,7 +154,250 @@ def upgrade() -> None:
         """
     ))
 
+    # coupon_categories
+    conn.execute(text(
+        """
+        CREATE TABLE IF NOT EXISTS coupon_categories (
+            id VARCHAR(50) PRIMARY KEY,
+            name_he VARCHAR(100) NOT NULL,
+            name_en VARCHAR(100),
+            description TEXT,
+            icon_emoji VARCHAR(10) DEFAULT '🎁',
+            sort_order INTEGER DEFAULT 0,
+            is_active BOOLEAN DEFAULT TRUE,
+            coupon_count INTEGER DEFAULT 0,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS idx_categories_active ON coupon_categories (is_active);
+        CREATE INDEX IF NOT EXISTS idx_categories_sort ON coupon_categories (sort_order);
+        """
+    ))
+
+    # coupons
+    conn.execute(text(
+        """
+        CREATE TABLE IF NOT EXISTS coupons (
+            id VARCHAR(36) PRIMARY KEY,
+            seller_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+            category_id VARCHAR(50) REFERENCES coupon_categories(id),
+            expires_at TIMESTAMPTZ,
+            title VARCHAR(200) NOT NULL,
+            description TEXT NOT NULL,
+            business_name VARCHAR(200) NOT NULL,
+            original_price NUMERIC(10,2) NOT NULL,
+            selling_price NUMERIC(10,2) NOT NULL,
+            discount_percent INTEGER,
+            valid_from TIMESTAMPTZ,
+            valid_until TIMESTAMPTZ,
+            terms_and_conditions TEXT,
+            usage_instructions TEXT,
+            restrictions TEXT,
+            coupon_code VARCHAR(100),
+            qr_code_data TEXT,
+            barcode_data VARCHAR(100),
+            image_urls TEXT[],
+            location_city VARCHAR(100),
+            location_address VARCHAR(300),
+            admin_notes TEXT,
+            published_at TIMESTAMPTZ,
+            coupon_type VARCHAR(50) DEFAULT 'regular',
+            status VARCHAR(50) DEFAULT 'draft',
+            quantity INTEGER DEFAULT 1,
+            quantity_sold INTEGER DEFAULT 0,
+            view_count INTEGER DEFAULT 0,
+            favorite_count INTEGER DEFAULT 0,
+            inquiry_count INTEGER DEFAULT 0,
+            is_featured BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT chk_coupon_original_price CHECK (original_price > 0),
+            CONSTRAINT chk_coupon_selling_price CHECK (selling_price > 0),
+            CONSTRAINT chk_coupon_quantity CHECK (quantity >= 0),
+            CONSTRAINT chk_coupon_quantity_sold CHECK (quantity_sold >= 0),
+            CONSTRAINT chk_coupon_quantity_logic CHECK (quantity_sold <= quantity)
+        );
+        CREATE INDEX IF NOT EXISTS idx_coupons_seller ON coupons (seller_id);
+        CREATE INDEX IF NOT EXISTS idx_coupons_category ON coupons (category_id);
+        CREATE INDEX IF NOT EXISTS idx_coupons_status ON coupons (status);
+        CREATE INDEX IF NOT EXISTS idx_coupons_type ON coupons (coupon_type);
+        CREATE INDEX IF NOT EXISTS idx_coupons_price ON coupons (selling_price);
+        CREATE INDEX IF NOT EXISTS idx_coupons_expires ON coupons (expires_at);
+        CREATE INDEX IF NOT EXISTS idx_coupons_published ON coupons (published_at);
+        CREATE INDEX IF NOT EXISTS idx_coupons_featured ON coupons (is_featured);
+        CREATE INDEX IF NOT EXISTS idx_coupons_location ON coupons (location_city);
+        CREATE INDEX IF NOT EXISTS idx_coupons_search ON coupons (status, category_id, selling_price);
+        CREATE INDEX IF NOT EXISTS idx_coupons_active ON coupons (status, expires_at, quantity);
+        """
+    ))
+
+    # orders
+    conn.execute(text(
+        """
+        CREATE TABLE IF NOT EXISTS orders (
+            id VARCHAR(36) PRIMARY KEY,
+            buyer_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+            seller_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+            coupon_id VARCHAR(36) REFERENCES coupons(id) ON DELETE CASCADE,
+            unit_price NUMERIC(10,2) NOT NULL,
+            total_amount NUMERIC(12,2) NOT NULL,
+            seller_amount_gross NUMERIC(12,2) NOT NULL,
+            seller_amount_net NUMERIC(12,2) NOT NULL,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            purchased_at TIMESTAMPTZ,
+            dispute_window_until TIMESTAMPTZ,
+            seller_hold_until TIMESTAMPTZ,
+            buyer_confirmed_at TIMESTAMPTZ,
+            reported_at TIMESTAMPTZ,
+            dispute_reason VARCHAR(50),
+            dispute_description TEXT,
+            resolved_by_admin_id BIGINT REFERENCES users(id),
+            resolved_at TIMESTAMPTZ,
+            resolution_notes TEXT,
+            coupon_data TEXT,
+            delivered_at TIMESTAMPTZ,
+            quantity INTEGER DEFAULT 1,
+            status VARCHAR(50) DEFAULT 'pending',
+            delivery_method VARCHAR(50) DEFAULT 'digital',
+            buyer_fee NUMERIC(10,2) DEFAULT 0.00,
+            seller_fee NUMERIC(10,2) DEFAULT 0.00,
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT chk_order_amount_positive CHECK (total_amount > 0),
+            CONSTRAINT chk_order_quantity_positive CHECK (quantity > 0)
+        );
+        CREATE INDEX IF NOT EXISTS idx_orders_buyer ON orders (buyer_id);
+        CREATE INDEX IF NOT EXISTS idx_orders_seller ON orders (seller_id);
+        CREATE INDEX IF NOT EXISTS idx_orders_coupon ON orders (coupon_id);
+        CREATE INDEX IF NOT EXISTS idx_orders_status ON orders (status);
+        CREATE INDEX IF NOT EXISTS idx_orders_purchased_at ON orders (purchased_at);
+        CREATE INDEX IF NOT EXISTS idx_orders_dispute_window ON orders (dispute_window_until);
+        CREATE INDEX IF NOT EXISTS idx_orders_seller_hold ON orders (seller_hold_until);
+        CREATE INDEX IF NOT EXISTS idx_orders_status_timers ON orders (status, dispute_window_until, seller_hold_until);
+        CREATE INDEX IF NOT EXISTS idx_orders_dispute ON orders (status, reported_at);
+        CREATE INDEX IF NOT EXISTS idx_orders_created ON orders (created_at);
+        """
+    ))
+
+    # auctions (without FK for winning_bid_id to avoid circular creation)
+    conn.execute(text(
+        """
+        CREATE TABLE IF NOT EXISTS auctions (
+            id VARCHAR(36) PRIMARY KEY,
+            seller_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+            coupon_id VARCHAR(36) REFERENCES coupons(id) ON DELETE CASCADE,
+            starting_price NUMERIC(10,2) NOT NULL,
+            current_price NUMERIC(10,2) NOT NULL,
+            reserve_price NUMERIC(10,2),
+            starts_at TIMESTAMPTZ NOT NULL,
+            ends_at TIMESTAMPTZ NOT NULL,
+            extended_until TIMESTAMPTZ,
+            winner_id BIGINT REFERENCES users(id),
+            winning_bid_id VARCHAR(36),
+            finalized_at TIMESTAMPTZ,
+            status VARCHAR(50) DEFAULT 'active',
+            total_bids INTEGER DEFAULT 0,
+            unique_bidders INTEGER DEFAULT 0,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT chk_auction_starting_price CHECK (starting_price > 0),
+            CONSTRAINT chk_auction_current_price CHECK (current_price >= starting_price),
+            CONSTRAINT chk_auction_timing CHECK (ends_at > starts_at)
+        );
+        CREATE INDEX IF NOT EXISTS idx_auctions_seller ON auctions (seller_id);
+        CREATE INDEX IF NOT EXISTS idx_auctions_coupon ON auctions (coupon_id);
+        CREATE INDEX IF NOT EXISTS idx_auctions_status ON auctions (status);
+        CREATE INDEX IF NOT EXISTS idx_auctions_ends_at ON auctions (ends_at);
+        CREATE INDEX IF NOT EXISTS idx_auctions_extended ON auctions (extended_until);
+        CREATE INDEX IF NOT EXISTS idx_auctions_active ON auctions (status, ends_at);
+        """
+    ))
+
+    # auction_bids
+    conn.execute(text(
+        """
+        CREATE TABLE IF NOT EXISTS auction_bids (
+            id VARCHAR(36) PRIMARY KEY,
+            auction_id VARCHAR(36) REFERENCES auctions(id) ON DELETE CASCADE,
+            bidder_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+            fund_lock_id VARCHAR(36) REFERENCES fund_locks(id),
+            amount NUMERIC(10,2) NOT NULL,
+            is_winning BOOLEAN DEFAULT FALSE,
+            is_outbid BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT chk_bid_amount_positive CHECK (amount > 0)
+        );
+        CREATE INDEX IF NOT EXISTS idx_bids_auction ON auction_bids (auction_id);
+        CREATE INDEX IF NOT EXISTS idx_bids_bidder ON auction_bids (bidder_id);
+        CREATE INDEX IF NOT EXISTS idx_bids_amount ON auction_bids (amount);
+        CREATE INDEX IF NOT EXISTS idx_bids_winning ON auction_bids (is_winning);
+        CREATE INDEX IF NOT EXISTS idx_bids_auction_amount ON auction_bids (auction_id, amount);
+        CREATE INDEX IF NOT EXISTS idx_bids_created ON auction_bids (created_at);
+        """
+    ))
+
+    # user_favorites
+    conn.execute(text(
+        """
+        CREATE TABLE IF NOT EXISTS user_favorites (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+            coupon_id VARCHAR(36) REFERENCES coupons(id) ON DELETE CASCADE,
+            original_price NUMERIC(10,2) NOT NULL,
+            last_price_check TIMESTAMPTZ,
+            notify_price_drop BOOLEAN DEFAULT TRUE,
+            notify_similar BOOLEAN DEFAULT FALSE,
+            notify_expiry BOOLEAN DEFAULT TRUE,
+            price_alerts_sent INTEGER DEFAULT 0,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT uq_user_coupon_favorite UNIQUE (user_id, coupon_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_favorites_user ON user_favorites (user_id);
+        CREATE INDEX IF NOT EXISTS idx_favorites_coupon ON user_favorites (coupon_id);
+        CREATE INDEX IF NOT EXISTS idx_favorites_notifications ON user_favorites (notify_price_drop, notify_expiry);
+        """
+    ))
+
+    # coupon_ratings
+    conn.execute(text(
+        """
+        CREATE TABLE IF NOT EXISTS coupon_ratings (
+            id SERIAL PRIMARY KEY,
+            order_id VARCHAR(36) REFERENCES orders(id) ON DELETE CASCADE,
+            buyer_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+            seller_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+            coupon_id VARCHAR(36) REFERENCES coupons(id) ON DELETE CASCADE,
+            rating INTEGER NOT NULL,
+            comment VARCHAR(150),
+            is_public BOOLEAN DEFAULT TRUE,
+            is_verified_purchase BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            CONSTRAINT uq_rating_per_order UNIQUE (order_id),
+            CONSTRAINT chk_rating_range CHECK (rating >= 1 AND rating <= 5),
+            CONSTRAINT chk_comment_length CHECK (char_length(comment) <= 150)
+        );
+        CREATE INDEX IF NOT EXISTS idx_ratings_seller ON coupon_ratings (seller_id);
+        CREATE INDEX IF NOT EXISTS idx_ratings_coupon ON coupon_ratings (coupon_id);
+        CREATE INDEX IF NOT EXISTS idx_ratings_buyer ON coupon_ratings (buyer_id);
+        CREATE INDEX IF NOT EXISTS idx_ratings_rating ON coupon_ratings (rating);
+        CREATE INDEX IF NOT EXISTS idx_ratings_created ON coupon_ratings (created_at);
+        """
+    ))
+
 
 def downgrade() -> None:
-    op.execute(text("DROP TABLE IF EXISTS users CASCADE;"))
+    conn = op.get_bind()
+    # Drop in reverse dependency order
+    conn.execute(text("DROP TABLE IF EXISTS coupon_ratings CASCADE;"))
+    conn.execute(text("DROP TABLE IF EXISTS user_favorites CASCADE;"))
+    conn.execute(text("DROP TABLE IF EXISTS auction_bids CASCADE;"))
+    conn.execute(text("DROP TABLE IF EXISTS auctions CASCADE;"))
+    conn.execute(text("DROP TABLE IF EXISTS orders CASCADE;"))
+    conn.execute(text("DROP TABLE IF EXISTS coupons CASCADE;"))
+    conn.execute(text("DROP TABLE IF EXISTS coupon_categories CASCADE;"))
+    conn.execute(text("DROP TABLE IF EXISTS fund_locks CASCADE;"))
+    conn.execute(text("DROP TABLE IF EXISTS transactions CASCADE;"))
+    conn.execute(text("DROP TABLE IF EXISTS seller_profiles CASCADE;"))
+    conn.execute(text("DROP TABLE IF EXISTS wallets CASCADE;"))
+    conn.execute(text("DROP TABLE IF EXISTS users CASCADE;"))
 
