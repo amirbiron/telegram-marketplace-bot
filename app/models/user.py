@@ -71,13 +71,17 @@ class User(Base):
     wallets: Mapped[list["Wallet"]] = relationship(
         "Wallet",
         back_populates="user",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        default_factory=list
     )
-    seller_profile: Mapped["SellerProfile"] = relationship(
+    seller_profile: Mapped[Optional["SellerProfile"]] = relationship(
         "SellerProfile",
         back_populates="user",
         uselist=False,
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        foreign_keys=lambda: [SellerProfile.user_id],
+        primaryjoin=lambda: User.id == SellerProfile.user_id,
+        default=None
     )
     
     # Contact Info (עבור מוכרים) - שדות אופציונליים
@@ -141,7 +145,12 @@ class SellerProfile(Base):
     business_name: Mapped[str] = mapped_column(String(200))
 
     # === Relationships (non-default first) ===
-    user: Mapped["User"] = relationship("User", back_populates="seller_profile")
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="seller_profile",
+        foreign_keys=lambda: [SellerProfile.user_id],
+        primaryjoin=lambda: User.id == SellerProfile.user_id
+    )
 
     # Fields with defaults
     description: Mapped[str] = mapped_column(Text, nullable=True, default="")
