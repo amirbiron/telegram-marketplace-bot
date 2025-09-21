@@ -67,8 +67,7 @@ class WalletService:
         )
         self.session.add(wallet)
         await self.session.flush()
-        # שמירה בפועל במסד
-        await self.session.commit()
+        # אין commit כאן – ההחלטה לשמור נתונה לשכבת הקריאה (context manager)
         return wallet
     
     async def get_or_create_wallet(self, user_id: int) -> Wallet:
