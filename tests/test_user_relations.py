@@ -5,7 +5,12 @@ from app.models.user import User, Wallet, SellerProfile
 @pytest.mark.asyncio
 async def test_user_wallet_and_seller(async_session):
     # יצירת משתמש חדש
-    user = User(telegram_user_id=1234567890, username="testuser")
+    user = User(
+        telegram_user_id=1234567890,
+        username="testuser",
+        first_name="Test",
+        last_name="User",
+    )
     async_session.add(user)
     await async_session.flush()
     assert user.id is not None
