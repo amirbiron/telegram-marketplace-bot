@@ -28,6 +28,38 @@ def upgrade() -> None:
     # חשוב: ב-run-time של Alembic אין גישה נוחה ל-Base.metadata.create_all ללא target_metadata.
     # לכן ניצור טבלאות נדרשות ידנית ב-SQL מינימלי, רק את טבלת users הדרושה למיגרציות הבאות.
     conn = op.get_bind()
+    # Enum types (ensure existence before tables)
+    conn.execute(text(
+        """
+        DO $$ BEGIN
+            CREATE TYPE userrole AS ENUM ('BUYER','SELLER','ADMIN');
+        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+        DO $$ BEGIN
+            CREATE TYPE verificationstatus AS ENUM ('UNVERIFIED','PENDING','VERIFIED','REJECTED');
+        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+        DO $$ BEGIN
+            CREATE TYPE transactiontype AS ENUM (
+                'DEPOSIT','WITHDRAWAL','PURCHASE_DEBIT','SALE_CREDIT','REFUND','FEE_DEBIT','SYSTEM_ADJUSTMENT',
+                'LOCK','RELEASE','HOLD_LOCK','HOLD_RELEASE'
+            );
+        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+        DO $$ BEGIN
+            CREATE TYPE orderstatus AS ENUM ('PENDING','PAID','DELIVERED','IN_DISPUTE','RESOLVED','RELEASED','CANCELLED','REFUNDED');
+        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+        DO $$ BEGIN
+            CREATE TYPE auctionstatus AS ENUM ('ACTIVE','ENDED','CANCELLED','FINALIZED');
+        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+        DO $$ BEGIN
+            CREATE TYPE coupontype AS ENUM ('REGULAR','AUCTION','BOTH');
+        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+        DO $$ BEGIN
+            CREATE TYPE couponstatus AS ENUM ('DRAFT','ACTIVE','SOLD','EXPIRED','SUSPENDED','DELETED');
+        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+        DO $$ BEGIN
+            CREATE TYPE disputereason AS ENUM ('COUPON_INVALID','COUPON_EXPIRED','COUPON_USED','WRONG_DETAILS','SELLER_UNRESPONSIVE','OTHER');
+        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+        """
+    ))
     # users
     conn.execute(text(
         """
@@ -400,4 +432,13 @@ def downgrade() -> None:
     conn.execute(text("DROP TABLE IF EXISTS seller_profiles CASCADE;"))
     conn.execute(text("DROP TABLE IF EXISTS wallets CASCADE;"))
     conn.execute(text("DROP TABLE IF EXISTS users CASCADE;"))
+    # Drop enum types
+    conn.execute(text("DO $$ BEGIN DROP TYPE IF EXISTS disputereason; EXCEPTION WHEN undefined_object THEN NULL; END $$;"))
+    conn.execute(text("DO $$ BEGIN DROP TYPE IF EXISTS couponstatus; EXCEPTION WHEN undefined_object THEN NULL; END $$;"))
+    conn.execute(text("DO $$ BEGIN DROP TYPE IF EXISTS coupontype; EXCEPTION WHEN undefined_object THEN NULL; END $$;"))
+    conn.execute(text("DO $$ BEGIN DROP TYPE IF EXISTS auctionstatus; EXCEPTION WHEN undefined_object THEN NULL; END $$;"))
+    conn.execute(text("DO $$ BEGIN DROP TYPE IF EXISTS orderstatus; EXCEPTION WHEN undefined_object THEN NULL; END $$;"))
+    conn.execute(text("DO $$ BEGIN DROP TYPE IF EXISTS transactiontype; EXCEPTION WHEN undefined_object THEN NULL; END $$;"))
+    conn.execute(text("DO $$ BEGIN DROP TYPE IF EXISTS verificationstatus; EXCEPTION WHEN undefined_object THEN NULL; END $$;"))
+    conn.execute(text("DO $$ BEGIN DROP TYPE IF EXISTS userrole; EXCEPTION WHEN undefined_object THEN NULL; END $$;"))
 
