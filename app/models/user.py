@@ -14,6 +14,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID, ENUM, JSONB
+from sqlalchemy.ext.mutable import MutableList
 import uuid
 
 from app.database import Base
@@ -137,8 +138,8 @@ class SellerProfile(Base):
     
     # Business Info
     business_name: Mapped[str] = mapped_column(String(200))
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default="")
-    verification_documents: Mapped[list] = mapped_column(JSONB, nullable=False, default_factory=list)  # JSON
+    description: Mapped[str] = mapped_column(Text, nullable=True, default="")
+    verification_documents: Mapped[list] = mapped_column(MutableList.as_mutable(JSONB), nullable=False, default_factory=list)
     
     # Non-default verification fields
     verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, default=None)

@@ -216,7 +216,7 @@ class MainHandlers:
                 
                 # יצירת פרופיל מוכר
                 seller_profile = SellerProfile(
-                    user=new_user,
+                    user_id=new_user.id,
                     business_name=f"עסק של {new_user.first_name}",  # זמני
                     description="",
                     verification_documents=[],
