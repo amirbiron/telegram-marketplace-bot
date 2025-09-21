@@ -66,7 +66,7 @@ async def test_wallet_creation(async_session):
     await async_session.flush()
 
     assert user.id is not None
-    wallet = Wallet(user=user, transactions=[], fund_locks=[])
+    wallet = Wallet(user=user, user_id=user.id, transactions=[], fund_locks=[])
     async_session.add(wallet)
     await async_session.flush()
     assert wallet.id is not None
@@ -87,6 +87,7 @@ async def test_seller_profile_creation(async_session):
     assert user.id is not None
     seller = SellerProfile(
         user=user,
+        user_id=user.id,
         business_name="Test Biz",
         description="",
         verification_documents=[],
