@@ -47,8 +47,12 @@ class WalletService:
     
     async def create_wallet(self, user_id: int) -> Wallet:
         """יצירת ארנק חדש"""
+        # טעינת אובייקט המשתמש כדי לשייך יחסים ב-init
+        user = await self.session.get(User, user_id)
         wallet = Wallet(
-            user_id=user_id,
+            user=user,
+            transactions=[],
+            fund_locks=[],
             total_balance=Decimal('0.00'),
             locked_balance=Decimal('0.00')
         )

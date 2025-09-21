@@ -216,8 +216,13 @@ class MainHandlers:
                 
                 # יצירת פרופיל מוכר
                 seller_profile = SellerProfile(
-                    user_id=new_user.id,
+                    user=new_user,
                     business_name=f"עסק של {new_user.first_name}",  # זמני
+                    description="",
+                    verification_documents=[],
+                    verified_at=None,
+                    verified_by_admin_id=None,
+                    average_rating=Decimal('0.00'),
                     verification_status=VerificationStatus.UNVERIFIED,
                     daily_quota=10  # ברירת מחדל למוכר לא מאומת
                 )

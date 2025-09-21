@@ -13,7 +13,7 @@ from sqlalchemy import (
     ForeignKey, Index, CheckConstraint, UniqueConstraint
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID, ENUM
+from sqlalchemy.dialects.postgresql import UUID, ENUM, JSONB
 import uuid
 
 from app.database import Base
@@ -137,22 +137,23 @@ class SellerProfile(Base):
     
     # Business Info
     business_name: Mapped[str] = mapped_column(String(200))
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    verification_documents: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default="")
+    verification_documents: Mapped[list] = mapped_column(JSONB, nullable=False, default_factory=list)  # JSON
     
     # Non-default verification fields
-    verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    verified_by_admin_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=True)
+    verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
+    verified_by_admin_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=True, default=None)
     
     # Non-default stats field (צריך להופיע לפני שדות עם ברירת מחדל)
-    average_rating: Mapped[Optional[Decimal]] = mapped_column(Numeric(3, 2), nullable=True)
+    average_rating: Mapped[Decimal] = mapped_column(Numeric(3, 2), nullable=False, default=Decimal('0.00'))
     
     # === Relationships === (ללא ברירות מחדל – לפני שדות עם ברירת מחדל)
     user: Mapped["User"] = relationship(
         "User",
         back_populates="seller_profile",
         foreign_keys=lambda: [SellerProfile.user_id],
-        primaryjoin=lambda: User.id == SellerProfile.user_id
+        primaryjoin=lambda: User.id == SellerProfile.user_id,
+        default=None
     )
 
     # Defaulted fields (לבסוף)
@@ -217,12 +218,12 @@ class Wallet(Base):
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
 
     # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
-    user: Mapped["User"] = relationship("User", back_populates="wallet")
+    user: Mapped["User"] = relationship("User", back_populates="wallet", default=None)
     transactions: Mapped[list["Transaction"]] = relationship(
-        "Transaction", back_populates="wallet", cascade="all, delete-orphan"
+        "Transaction", back_populates="wallet", cascade="all, delete-orphan", default_factory=list
     )
     fund_locks: Mapped[list["FundLock"]] = relationship(
-        "FundLock", back_populates="wallet", cascade="all, delete-orphan"
+        "FundLock", back_populates="wallet", cascade="all, delete-orphan", default_factory=list
     )
 
     # יתרות - עדכון לפי הדרישות החדשות
