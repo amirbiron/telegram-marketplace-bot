@@ -1,4 +1,5 @@
 import pytest
+import random
 from app.models.user import User, Wallet, SellerProfile
 
 
@@ -6,7 +7,7 @@ from app.models.user import User, Wallet, SellerProfile
 async def test_user_wallet_and_seller(async_session):
     # יצירת משתמש חדש
     user = User(
-        telegram_user_id=1234567890,
+        telegram_user_id=random.randint(1_000_000_000, 10_000_000_000),
         username="testuser",
         first_name="Test",
         last_name="User",
