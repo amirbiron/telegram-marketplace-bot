@@ -152,7 +152,7 @@ class MainHandlers:
                 
                 # יצירת ארנק
                 wallet_service = WalletService(session)
-                wallet = await wallet_service.create_wallet(new_user.id)
+                wallet = await wallet_service.create_wallet(user=new_user)
                 
                 await session.commit()
                 
@@ -236,7 +236,7 @@ class MainHandlers:
                 
                 # יצירת ארנק (אחרי שה-user נשמר)
                 wallet_service = WalletService(session)
-                wallet = await wallet_service.create_wallet(user_id=new_user.id)
+                wallet = await wallet_service.create_wallet(user=new_user)
                 
                 await session.commit()
                 

@@ -1,6 +1,7 @@
 import pytest
+from decimal import Decimal
 
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, Wallet, SellerProfile
 
 
 def test_create_user_minimal_buyer() -> None:
@@ -38,3 +39,61 @@ def test_create_user_minimal_seller() -> None:
     assert user.wallet is None
     assert len(user.transactions) == 0
     assert len(user.fund_locks) == 0
+
+
+@pytest.mark.asyncio
+async def test_user_gets_id_after_flush(async_session):
+    user = User(
+        telegram_user_id=1234567890,
+        username="testuser",
+        first_name="Test",
+        last_name="User",
+    )
+    async_session.add(user)
+    await async_session.flush()
+    assert user.id is not None
+
+
+@pytest.mark.asyncio
+async def test_wallet_creation(async_session):
+    user = User(
+        telegram_user_id=1234567891,
+        username="walletuser",
+        first_name="Wallet",
+        last_name="User",
+    )
+    async_session.add(user)
+    await async_session.flush()
+
+    assert user.id is not None
+    wallet = Wallet(user=user, user_id=user.id, transactions=[], fund_locks=[])
+    async_session.add(wallet)
+    await async_session.flush()
+    assert wallet.id is not None
+    assert wallet.user_id == user.id
+
+
+@pytest.mark.asyncio
+async def test_seller_profile_creation(async_session):
+    user = User(
+        telegram_user_id=1234567892,
+        username="selleruser",
+        first_name="Seller",
+        last_name="User",
+    )
+    async_session.add(user)
+    await async_session.flush()
+
+    assert user.id is not None
+    seller = SellerProfile(
+        user=user,
+        user_id=user.id,
+        business_name="Test Biz",
+        description="",
+        verification_documents=[],
+        average_rating=Decimal("0.00"),
+    )
+    async_session.add(seller)
+    await async_session.flush()
+    assert seller.id is not None
+    assert seller.user_id == user.id

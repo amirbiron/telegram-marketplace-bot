@@ -1,7 +1,8 @@
-name: Tests
+name: tests
 
 on:
   push:
+    branches: [ "**" ]
   pull_request:
 
 jobs:
@@ -21,6 +22,14 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Set up PostgreSQL
+        uses: Harmon758/postgresql-action@v1
+        with:
+          postgresql version: '14'
+          postgresql db: 'testdb'
+          postgresql user: 'user'
+          postgresql password: 'pass'
+
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
 
@@ -29,6 +38,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-asyncio
+
+      - name: Run migrations
+        run: alembic upgrade head
 
       - name: Run tests
         run: pytest -q
