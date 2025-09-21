@@ -8,6 +8,20 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user -d testdb"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     env:
       TELEGRAM_BOT_TOKEN: test-token
       DATABASE_URL: postgresql+asyncpg://user:pass@localhost:5432/testdb
@@ -22,13 +36,11 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Set up PostgreSQL
-        uses: Harmon758/postgresql-action@v1
-        with:
-          postgresql version: '14'
-          postgresql db: 'testdb'
-          postgresql user: 'user'
-          postgresql password: 'pass'
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U user -d testdb; then
+              echo "PostgreSQL is ready"; break; fi; sleep 2; done
 
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
