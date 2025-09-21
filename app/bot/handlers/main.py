@@ -175,7 +175,7 @@ class MainHandlers:
                 return ConversationHandler.END
         
         except Exception as e:
-            logger.error(f"Failed to create buyer user: {e}")
+            logger.exception("Failed to create buyer", exc_info=True)
             await query.edit_message_text(
                 "❌ שגיאה ביצירת המשתמש. נסה שוב מאוחר יותר."
             )
@@ -270,7 +270,7 @@ class MainHandlers:
                 return ConversationHandler.END
         
         except Exception as e:
-            logger.error(f"Failed to create seller user: {e}")
+            logger.exception("Failed to create seller", exc_info=True)
             await query.edit_message_text(
                 "❌ שגיאה ביצירת המשתמש. נסה שוב מאוחר יותר."
             )
