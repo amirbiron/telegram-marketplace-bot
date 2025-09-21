@@ -149,10 +149,12 @@ class MainHandlers:
                 
                 session.add(new_user)
                 await session.flush()
+                assert new_user.id is not None
                 
-                # יצירת ארנק
-                wallet_service = WalletService(session)
-                wallet = await wallet_service.create_wallet(user=new_user)
+                # יצירת ארנק לאחר שיש מזהה למשתמש
+                wallet = Wallet(user=new_user, transactions=[], fund_locks=[])
+                session.add(wallet)
+                await session.flush()
                 
                 await session.commit()
                 
@@ -213,10 +215,11 @@ class MainHandlers:
                 
                 session.add(new_user)
                 await session.flush()
+                assert new_user.id is not None
                 
                 # יצירת פרופיל מוכר (אחרי שה-user נשמר וקיבל id)
                 seller_profile = SellerProfile(
-                    user_id=new_user.id,
+                    user=new_user,
                     business_name="",
                     description="",
                     verification_documents=[],
