@@ -217,14 +217,18 @@ class MainHandlers:
                 # יצירת פרופיל מוכר (אחרי שה-user נשמר וקיבל id)
                 seller_profile = SellerProfile(
                     user_id=new_user.id,
-                    business_name=f"עסק של {new_user.first_name}",  # זמני
+                    business_name="",
                     description="",
                     verification_documents=[],
                     verified_at=None,
                     verified_by_admin_id=None,
                     average_rating=Decimal('0.00'),
+                    is_verified=False,
                     verification_status=VerificationStatus.UNVERIFIED,
-                    daily_quota=10  # ברירת מחדל למוכר לא מאומת
+                    daily_quota=10,
+                    daily_count=0,
+                    total_sales=0,
+                    total_ratings=0
                 )
                 
                 session.add(seller_profile)
