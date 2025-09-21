@@ -5,6 +5,7 @@ from app.models.user import User, UserRole
 
 def test_create_user_minimal_buyer() -> None:
     user = User(
+        id=1,
         telegram_user_id=111111111,
         username="testbuyer",
         first_name="Test",
@@ -26,6 +27,7 @@ def test_create_user_minimal_buyer() -> None:
 
 def test_create_user_minimal_seller() -> None:
     user = User(
+        id=2,
         telegram_user_id=222222222,
         username="testseller",
         first_name="Test",
