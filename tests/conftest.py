@@ -3,6 +3,17 @@ import asyncio
 from typing import AsyncGenerator
 
 import pytest
+@pytest.fixture(scope="session")
+def event_loop():
+    """
+    יצירת event loop גלובלי לסשן הבדיקות כדי לתמוך ב-fixtures אסינכרוניים.
+    """
+    loop = asyncio.new_event_loop()
+    try:
+        yield loop
+    finally:
+        loop.close()
+
 
 # קביעת ערכי ברירת מחדל למשתני סביבה הנדרשים כדי שטעינת ההגדרות לא תיכשל
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
