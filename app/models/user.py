@@ -123,6 +123,7 @@ class User(Base):
         Index("idx_users_role", "role"),
         Index("idx_users_active", "is_active"),
         Index("idx_users_created", "created_at"),
+        {"extend_existing": True},
     )
     
     def __repr__(self) -> str:
@@ -138,6 +139,11 @@ class SellerProfile(Base):
     
     # Business Info
     business_name: Mapped[str] = mapped_column(String(200))
+
+    # === Relationships (non-default first) ===
+    user: Mapped["User"] = relationship("User", back_populates="seller_profile")
+
+    # Fields with defaults
     description: Mapped[str] = mapped_column(Text, nullable=True, default="")
     verification_documents: Mapped[list] = mapped_column(MutableList.as_mutable(JSONB), nullable=False, default_factory=list)
     
@@ -148,8 +154,7 @@ class SellerProfile(Base):
     # Non-default stats field (צריך להופיע לפני שדות עם ברירת מחדל)
     average_rating: Mapped[Decimal] = mapped_column(Numeric(3, 2), nullable=False, default=Decimal('0.00'))
     
-    # === Relationships === (ללא ברירות מחדל – לפני שדות עם ברירת מחדל)
-    user: Mapped["User"] = relationship("User", back_populates="seller_profile")
+    
 
     # Defaulted fields (לבסוף)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
