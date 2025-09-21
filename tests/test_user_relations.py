@@ -16,12 +16,12 @@ async def test_user_wallet_and_seller(async_session):
     await async_session.flush()
     assert user.id is not None
 
-    # יצירת ארנק דרך user_id (נדרש ע"י הדאטהקלאס)
-    wallet = Wallet(user_id=user.id, transactions=[], fund_locks=[])
+    # יצירת ארנק דרך relationship
+    wallet = Wallet(user=user, transactions=[], fund_locks=[])
     async_session.add(wallet)
 
-    # יצירת פרופיל מוכר - שומר גם user וגם user_id
-    seller = SellerProfile(user=user, user_id=user.id, business_name="Test Biz")
+    # יצירת פרופיל מוכר דרך relationship
+    seller = SellerProfile(user=user, business_name="Test Biz")
     async_session.add(seller)
 
     # flush למסד

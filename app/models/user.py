@@ -139,7 +139,7 @@ class SellerProfile(Base):
     __tablename__ = "seller_profiles"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), unique=True, init=False)
     
     # Business Info
     business_name: Mapped[str] = mapped_column(String(200))
@@ -224,10 +224,10 @@ class Wallet(Base):
     __tablename__ = "wallets"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), unique=True, init=False)
 
     # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
-    user: Mapped["User"] = relationship("User", back_populates="wallets")
+    user: Mapped["User"] = relationship("User", back_populates="wallets", default=None)
     transactions: Mapped[list["Transaction"]] = relationship(
         "Transaction", back_populates="wallet", cascade="all, delete-orphan", default_factory=list
     )
