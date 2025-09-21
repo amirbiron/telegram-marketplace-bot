@@ -92,18 +92,17 @@ class User(Base):
         init=False
     )
     
-    # === Relationships === (עם ברירות מחדל כדי שלא יהיו חובה ב-__init__)
-    wallet: Mapped[Optional["Wallet"]] = relationship(
-        "Wallet", back_populates="user", uselist=False, cascade="all, delete-orphan", default=None
+    # === Relationships ===
+    wallets: Mapped[list["Wallet"]] = relationship(
+        "Wallet",
+        back_populates="user",
+        cascade="all, delete-orphan"
     )
-    seller_profile: Mapped[Optional["SellerProfile"]] = relationship(
+    seller_profile: Mapped["SellerProfile"] = relationship(
         "SellerProfile",
         back_populates="user",
         uselist=False,
-        cascade="all, delete-orphan",
-        foreign_keys=lambda: [SellerProfile.user_id],
-        primaryjoin=lambda: User.id == SellerProfile.user_id,
-        default=None
+        cascade="all, delete-orphan"
     )
     transactions: Mapped[list["Transaction"]] = relationship(
         "Transaction",
@@ -134,7 +133,7 @@ class SellerProfile(Base):
     __tablename__ = "seller_profiles"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     
     # Business Info
     business_name: Mapped[str] = mapped_column(String(200))
@@ -149,13 +148,7 @@ class SellerProfile(Base):
     average_rating: Mapped[Decimal] = mapped_column(Numeric(3, 2), nullable=False, default=Decimal('0.00'))
     
     # === Relationships === (ללא ברירות מחדל – לפני שדות עם ברירת מחדל)
-    user: Mapped["User"] = relationship(
-        "User",
-        back_populates="seller_profile",
-        foreign_keys=lambda: [SellerProfile.user_id],
-        primaryjoin=lambda: User.id == SellerProfile.user_id,
-        default=None
-    )
+    user: Mapped["User"] = relationship("User", back_populates="seller_profile")
 
     # Defaulted fields (לבסוף)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -216,10 +209,10 @@ class Wallet(Base):
     __tablename__ = "wallets"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
 
     # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
-    user: Mapped["User"] = relationship("User", back_populates="wallet", default=None)
+    user: Mapped["User"] = relationship("User", back_populates="wallets")
     transactions: Mapped[list["Transaction"]] = relationship(
         "Transaction", back_populates="wallet", cascade="all, delete-orphan", default_factory=list
     )
