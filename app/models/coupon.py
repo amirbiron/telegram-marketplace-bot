@@ -9,7 +9,7 @@ from typing import Optional
 from decimal import Decimal
 
 from sqlalchemy import (
-    String, Integer, Boolean, DateTime, Numeric, Text,
+    String, Integer, BigInteger, Boolean, DateTime, Numeric, Text,
     ForeignKey, Index, CheckConstraint, UniqueConstraint
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -124,7 +124,7 @@ class Coupon(Base):
     )
 
     # === שדות חובה (ללא ברירת מחדל/nullable ב-init של dataclass) ===
-    seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    seller_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     # לפי הדרישה: להציב expires_at מוקדם
     expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -282,7 +282,7 @@ class UserFavorite(Base):
     __tablename__ = "user_favorites"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     coupon_id: Mapped[str] = mapped_column(ForeignKey("coupons.id", ondelete="CASCADE"))
     
     # Tracking - שדות חובה לפני שדות עם ברירת מחדל
@@ -344,8 +344,8 @@ class CouponRating(Base):
     
     # Foreign Keys (שדות חובה)
     order_id: Mapped[str] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"))
-    buyer_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    buyer_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
+    seller_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     coupon_id: Mapped[str] = mapped_column(ForeignKey("coupons.id", ondelete="CASCADE"))
     
     # Rating Details (חובה/nullable ללא ברירות מחדל)

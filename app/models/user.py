@@ -60,7 +60,7 @@ class User(Base):
     __tablename__ = "users"
     
     # Basic Info
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, index=True, init=False)
     telegram_user_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     username: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     first_name: Mapped[str] = mapped_column(String(100))
@@ -133,7 +133,7 @@ class SellerProfile(Base):
     __tablename__ = "seller_profiles"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     
     # Business Info
     business_name: Mapped[str] = mapped_column(String(200))
@@ -142,7 +142,7 @@ class SellerProfile(Base):
     
     # Non-default verification fields
     verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    verified_by_admin_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
+    verified_by_admin_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=True)
     
     # Non-default stats field (צריך להופיע לפני שדות עם ברירת מחדל)
     average_rating: Mapped[Optional[Decimal]] = mapped_column(Numeric(3, 2), nullable=True)
@@ -214,7 +214,7 @@ class Wallet(Base):
     __tablename__ = "wallets"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
 
     # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
     user: Mapped["User"] = relationship("User", back_populates="wallet")
@@ -280,7 +280,7 @@ class Transaction(Base):
     )
     
     # Foreign Keys
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     wallet_id: Mapped[int] = mapped_column(ForeignKey("wallets.id", ondelete="CASCADE"))
     
     # Transaction Details
@@ -298,7 +298,7 @@ class Transaction(Base):
 
     # Non-default optional fields (לפני ברירות מחדל)
     extra_metadata: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON נוסף
-    processed_by_admin_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
+    processed_by_admin_id: Mapped[Optional[int]] = mapped_column(BigInteger, ForeignKey("users.id"), nullable=True)
 
     # === Relationships === (ללא ברירות מחדל – לפני שדות עם ברירת מחדל)
     user: Mapped["User"] = relationship(
@@ -351,7 +351,7 @@ class FundLock(Base):
     )
     
     # Foreign Keys
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     wallet_id: Mapped[int] = mapped_column(ForeignKey("wallets.id", ondelete="CASCADE"))
     
     # Lock Details

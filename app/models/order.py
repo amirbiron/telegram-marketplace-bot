@@ -9,7 +9,7 @@ from typing import Optional
 from decimal import Decimal
 
 from sqlalchemy import (
-    String, Integer, Boolean, DateTime, Numeric, Text,
+    String, Integer, BigInteger, Boolean, DateTime, Numeric, Text,
     ForeignKey, Index, CheckConstraint, UniqueConstraint
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -65,8 +65,8 @@ class Order(Base):
     )
     
     # Participants
-    buyer_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    buyer_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
+    seller_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     coupon_id: Mapped[str] = mapped_column(ForeignKey("coupons.id", ondelete="CASCADE"))
     
     # Order Details (ללא ברירות מחדל קודם)
@@ -111,7 +111,7 @@ class Order(Base):
     )
     dispute_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     resolved_by_admin_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("users.id"), nullable=True
+        BigInteger, ForeignKey("users.id"), nullable=True
     )
     resolved_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -218,7 +218,7 @@ class Auction(Base):
     )
     
     # Basic Info
-    seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    seller_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     coupon_id: Mapped[str] = mapped_column(ForeignKey("coupons.id", ondelete="CASCADE"))
     
     # Auction Settings
@@ -237,7 +237,7 @@ class Auction(Base):
     
     # Winner Info (ללא ברירת מחדל)
     winner_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("users.id"), nullable=True
+        BigInteger, ForeignKey("users.id"), nullable=True
     )
     winning_bid_id: Mapped[Optional[str]] = mapped_column(
         ForeignKey("auction_bids.id"), nullable=True
@@ -331,7 +331,7 @@ class AuctionBid(Base):
     
     # Foreign Keys (ללא ברירות מחדל קודם)
     auction_id: Mapped[str] = mapped_column(ForeignKey("auctions.id", ondelete="CASCADE"))
-    bidder_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    bidder_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
     fund_lock_id: Mapped[Optional[str]] = mapped_column(ForeignKey("fund_locks.id"), nullable=True)
     
     # Bid Details
