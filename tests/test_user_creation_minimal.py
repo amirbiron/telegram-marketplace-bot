@@ -20,7 +20,7 @@ def test_create_user_minimal_buyer() -> None:
     assert user.phone is None
     assert user.email is None
     assert user.last_activity_at is not None
-    assert user.wallet is None
+    assert len(user.wallets) == 0
     assert len(user.transactions) == 0
     assert len(user.fund_locks) == 0
 
@@ -36,7 +36,7 @@ def test_create_user_minimal_seller() -> None:
 
     assert user.telegram_user_id == 222222222
     assert user.role == UserRole.SELLER
-    assert user.wallet is None
+    assert len(user.wallets) == 0
     assert len(user.transactions) == 0
     assert len(user.fund_locks) == 0
 
@@ -66,7 +66,7 @@ async def test_wallet_creation(async_session):
     await async_session.flush()
 
     assert user.id is not None
-    wallet = Wallet(user=user, user_id=user.id, transactions=[], fund_locks=[])
+    wallet = Wallet(user=user, transactions=[], fund_locks=[])
     async_session.add(wallet)
     await async_session.flush()
     assert wallet.id is not None
@@ -87,7 +87,6 @@ async def test_seller_profile_creation(async_session):
     assert user.id is not None
     seller = SellerProfile(
         user=user,
-        user_id=user.id,
         business_name="Test Biz",
         description="",
         verification_documents=[],

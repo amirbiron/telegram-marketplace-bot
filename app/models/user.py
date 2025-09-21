@@ -67,6 +67,23 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
+    # === Relationships (non-default) ===
+    wallets: Mapped[list["Wallet"]] = relationship(
+        "Wallet",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        default_factory=list
+    )
+    seller_profile: Mapped[Optional["SellerProfile"]] = relationship(
+        "SellerProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+        foreign_keys=lambda: [SellerProfile.user_id],
+        primaryjoin=lambda: User.id == SellerProfile.user_id,
+        default=None
+    )
+    
     # Contact Info (עבור מוכרים) - שדות אופציונליים
     phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, default=None)
     email: Mapped[Optional[str]] = mapped_column(String(200), nullable=True, default=None)
@@ -92,19 +109,6 @@ class User(Base):
         init=False
     )
     
-    # === Relationships === (עם ברירות מחדל כדי שלא יהיו חובה ב-__init__)
-    wallet: Mapped[Optional["Wallet"]] = relationship(
-        "Wallet", back_populates="user", uselist=False, cascade="all, delete-orphan", default=None
-    )
-    seller_profile: Mapped[Optional["SellerProfile"]] = relationship(
-        "SellerProfile",
-        back_populates="user",
-        uselist=False,
-        cascade="all, delete-orphan",
-        foreign_keys=lambda: [SellerProfile.user_id],
-        primaryjoin=lambda: User.id == SellerProfile.user_id,
-        default=None
-    )
     transactions: Mapped[list["Transaction"]] = relationship(
         "Transaction",
         back_populates="user",
@@ -123,6 +127,7 @@ class User(Base):
         Index("idx_users_role", "role"),
         Index("idx_users_active", "is_active"),
         Index("idx_users_created", "created_at"),
+        {"extend_existing": True},
     )
     
     def __repr__(self) -> str:
@@ -134,10 +139,20 @@ class SellerProfile(Base):
     __tablename__ = "seller_profiles"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), unique=True, init=False)
     
     # Business Info
     business_name: Mapped[str] = mapped_column(String(200))
+
+    # === Relationships (non-default first) ===
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="seller_profile",
+        foreign_keys=lambda: [SellerProfile.user_id],
+        primaryjoin=lambda: User.id == SellerProfile.user_id
+    )
+
+    # Fields with defaults
     description: Mapped[str] = mapped_column(Text, nullable=True, default="")
     verification_documents: Mapped[list] = mapped_column(MutableList.as_mutable(JSONB), nullable=False, default_factory=list)
     
@@ -148,14 +163,7 @@ class SellerProfile(Base):
     # Non-default stats field (צריך להופיע לפני שדות עם ברירת מחדל)
     average_rating: Mapped[Decimal] = mapped_column(Numeric(3, 2), nullable=False, default=Decimal('0.00'))
     
-    # === Relationships === (ללא ברירות מחדל – לפני שדות עם ברירת מחדל)
-    user: Mapped["User"] = relationship(
-        "User",
-        back_populates="seller_profile",
-        foreign_keys=lambda: [SellerProfile.user_id],
-        primaryjoin=lambda: User.id == SellerProfile.user_id,
-        default=None
-    )
+    
 
     # Defaulted fields (לבסוף)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -216,10 +224,10 @@ class Wallet(Base):
     __tablename__ = "wallets"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, init=False)
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), unique=True, init=False)
 
     # === Relationships === (ללא ברירת מחדל – לפני שדות עם ברירת מחדל)
-    user: Mapped["User"] = relationship("User", back_populates="wallet", default=None)
+    user: Mapped["User"] = relationship("User", back_populates="wallets", default=None)
     transactions: Mapped[list["Transaction"]] = relationship(
         "Transaction", back_populates="wallet", cascade="all, delete-orphan", default_factory=list
     )
