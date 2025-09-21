@@ -9,8 +9,8 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key")
 os.environ.setdefault("TELEGRAM_BOT_TOKEN", "123456:TEST_TOKEN")
 os.environ.setdefault(
     "DATABASE_URL",
-    # כתובת DB דיפולטיבית לסביבת טסטים; אם לא קיים DB פעיל, בדיקות אינטגרציה ידלגו
-    "postgresql+asyncpg://postgres:postgres@localhost:5432/test_db",
+    # כתובת DB דיפולטיבית לסביבת טסטים; מתואמת עם ה-workflow
+    "postgresql+asyncpg://user:pass@localhost:5432/testdb",
 )
 
 
@@ -43,7 +43,7 @@ def apply_migrations() -> None:
 
 
 @pytest.fixture()
-async def async_session() -> AsyncGenerator:
+async def async_session(event_loop) -> AsyncGenerator:
     """
     מספק AsyncSession נגד מסד נתונים אמיתי. אם DATABASE_URL לא מוגדר או החיבור נכשל,
     נדלג על טסטים שמשתמשים ב-fixture זה.
@@ -57,13 +57,13 @@ async def async_session() -> AsyncGenerator:
 
         # אתחול מנהל המסד אם טרם אותחל
         if not db_manager._initialized:
-            # initialize כולל ping למסד
-            asyncio.get_event_loop()
             await db_manager.initialize()
 
         # פתיחת session אסינכרוני לשימוש בבדיקות
         async with db_manager.get_session() as session:
             yield session
+        # סגירת חיבורים בסיום כדי למנוע Event loop is closed
+        await db_manager.close()
 
     except Exception as exc:
         pytest.skip(f"Skipping integration tests: cannot connect to database ({exc})")
